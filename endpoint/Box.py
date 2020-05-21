@@ -10,152 +10,136 @@ sys.path.insert(0, r'C:\Users\hardikck\.spyder-py3\cmdline\utils')
 import tokenUtils
 
 
-class gdrive(endpoint):
+class box(endpoint):
     def __init__(self):
         self.credentialId = ''
-        dest = ''
+        self.dest = ''
         self.headers = {
             'Authorization': 'Bearer ' + tokenUtils.get_ods_auth_token(),
             'content-type': 'application/json'
         }
 
     def list(self) -> str:
-    
-        data = {"uri":"googledrive:/",
+        data = {"uri":"box:///",
                 "id":None,
                 "credential":
                     {
                             "uuid":self.credentialId,
-                            "name":"GoogleDrive: bhaktij910@gmail.com",
+                            "name":"Box: bhaktiha@buffalo.edu.com",
                             "tokenSaved":True
                     }
                 }
-        url = 'http://localhost:8080/api/googledrive/ls'
+        url = 'http://localhost:8080/api/box/ls'
         request = endpoint._post_request(url, data,self.headers)
         response = json.loads(request.content)
-        return response
         
+        return response
+    
     def printlist(self) -> str:
         
-        response=gdrive.list(self)
+        response=box.list(self)
         for file in response['files']:
             print(file['name'])
             
     def mkdir(self, fileName) -> None:
-    
-        data={"uri":"googledrive:/"+fileName,
+        data={"uri":"box:///"+fileName,
               "id":None,
               "credential":
                     {
                             "uuid":self.credentialId,
-                            "name":"GoogleDrive: bhaktij910@gmail.com",
+                            "name":"Box: bhaktiha@buffalo.edu.com",
                             "tokenSaved":True
                     },
-              "map":[{"id":None,"path":"googledrive:/"}]
+              "map":[{"id":None,"path":"box:///"}]
               }
+        
 
-        url="http://localhost:8080/api/googledrive/mkdir"            
+        url="http://localhost:8080/api/box/mkdir"            
         request=endpoint._post_request(url,data,self.headers)
         if(request.status_code==200):
             print('Success')
 
     def delete(self, fileName) -> None:
-    
-        response = gdrive.list(self)
+        response = box.list(self)
         id=''
         for file in response['files']:
             if(file['name']==fileName):
                 id=file['id']
-                
-        data={"uri":"googledrive:/"+fileName,
-              "id" : id,
+        
+        data={"uri":"box:///"+fileName,
+              "id": id,
               "credential":
                     {
                             "uuid":self.credentialId,
-                            "name":"GoogleDrive: bhaktij910@gmail.com",
+                            "name":"Box: bhaktiha@buffalo.edu.com",
                             "tokenSaved":True
                     },
-              "map":[{"id":None,"path":"googledrive:/"}]
+              "map":[{"id":None,"path":"box:///"}]
               }
-
-        url="http://localhost:8080/api/googledrive/rm"            
+        
+        url="http://localhost:8080/api/box/rm"            
         request=endpoint._post_request(url,data,self.headers)
         if(request.status_code==200):
             print('Success')
+
+
+    
+    def folderfiles(self,fileName) -> None:
+        response = box.list(self)
+        id=''
+        for file in response['files']:
+            if(file['name']==fileName):
+                id=file['id']
+                
+        data = {"uri":"box:///"+fileName,
+                "id":id,
+                "credential":
+                    {
+                            "uuid":self.credentialId,
+                            "name":"Dropbox: bhaktiha@buffalo.edu",
+                            "tokenSaved":True
+                    }
+                }
+        url = 'http://localhost:8080/api/box/ls'
+        request = endpoint._post_request(url, data,self.headers)
+        response = json.loads(request.content)
+        if len(response['files']) == 0:
+            print("No files Found")
+        else :
+            for file in response['files']:
+                print(file['name'])
     
     def transfer(self,fileName)-> None:
-        response = gdrive.list(self)
-        id=''
-        for file in response['files']:
-            if(file['name']==fileName):
-                id=file['id']
-                
-        data={
-                "src":{
-                "credential":{
-                        "uuid":self.credentialId,
-                        "name":"GoogleDrive: bhaktij910@gmail.com",
-                        "tokenSaved":True
-            },
-                "id": id,
-                "uri":"googledrive:/"+fileName,
-                "type":"googledrive:/",
-                "map":[{"id":None,"path":"googledrive:/"}]
-            },
-            
-                "dest":{
-                "credential":{
-                        "uuid":self.dest,
-                        "name":"Dropbox: bhaktij910@gmail.com",
-                        "tokenSaved":True
-            },
-                "uri":"dropbox:///"+fileName,
-                "type":"dropbox:///",
-                "map":[{"id":None,"path":"dropbox:///"}]
-            },
-            
-        "options":{
-            "optimizer":"None",
-            "overwrite":True,
-            "verify":True,
-            "encrypt":True,
-            "compress":True,
-        "retry":5
-            }	
-        }
-        
-        
-        url="http://localhost:8080/api/stork/submit"         
-        request=endpoint._post_request(url, data,self.headers) 
-        if(request.status_code==200):
-            print('Success')
+        raise NotImplemented()
 
     def download(self, fileName) -> None:
-    
-        response = gdrive.list(self)
+
+        response = box.list(self)
         id=''
         for file in response['files']:
             if(file['name']==fileName):
                 id=file['id']
-                
-        data={"uri":"googledrive:/"+fileName,
+        
+        data={"uri":"box:///"+fileName,
               "id" : id,
               "credential":
                     {
                             "uuid":self.credentialId,
-                            "name":"GoogleDrive: bhaktij910@gmail.com",
+                            "name":"Box: bhaktiha@buffalo.edu",
                             "tokenSaved":True
                     }
               }
 
-        url="http://localhost:8080/api/googledrive/download"            
+        url="http://localhost:8080/api/box/download"            
         request=endpoint._post_request(url,data,self.headers)
         response = json.loads(request.content)
         download_folder = os.path.expanduser("~")+"/Downloads/"
         fullfilename = os.path.join(download_folder, fileName.rpartition('/')[2])
         urllib.request.urlretrieve(response,fullfilename)
         if(request.status_code==200):
-            print('Success')
+            print('Success')       
 
     def upload(self, payload) -> None:
         raise NotImplemented()
+
+   
