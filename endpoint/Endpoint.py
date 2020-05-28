@@ -3,7 +3,7 @@ import sys
 import json
 sys.path.insert(0, r'C:\Users\hardikck\.spyder-py3\cmdline\utils')
 
-import tokenUtils
+import utils.tokenUtils as tokenUtils
 from abc import ABC, abstractmethod
 
 
