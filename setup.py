@@ -1,37 +1,37 @@
-from setuptools import setup, find_packages 
+from setuptools import setup, find_packages
 
-setup( 
+setup(
 
-        name ='cmdline', 
+        name ='cmdline',
 
-        version ='1.0.0', 
+        version ='1.0.0',
 
-        author ='Bhakti Jadhav', 
+        author ='Admin OneDataShare'
 
-        author_email ='bhaktij910@gmail.com',  
+        author_email ='admin@onedatashare.org'
 
-        description ='Demo Package for CLI', 
+        description ='Demo Package for CLI',
 
-        packages = find_packages(), 
+        packages = find_packages(),
 
-        entry_points ={ 
+        entry_points ={
 
-            'console_scripts': [ 
+            'console_scripts': [
 
                 'main = cmdline:main'
 
-            ] 
+            ]
 
-        }, 
+        },
 
-        classifiers =( 
+        classifiers =(
 
-            "Programming Language :: Python :: 3", 
+            "Programming Language :: Python :: 3",
 
-            "Operating System :: OS Independent", 
+            "Operating System :: OS Independent",
 
-        ), 
+        ),
 
 
         zip_safe = False
-) 
+)

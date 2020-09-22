@@ -1,12 +1,6 @@
 import json
 import sys
-
-sys.path.insert(0, r'C:\Users\hardikck\.spyder-py3\cmdline\endpoint')
-
 from endpoint.Endpoint import endpoint
-
-sys.path.insert(0, r'C:\Users\hardikck\.spyder-py3\cmdline\utils')
-
 import utils.tokenUtils as tokenUtils
 
 
