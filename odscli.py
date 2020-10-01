@@ -56,8 +56,19 @@ def listOp(args):
             print("[DIR]\n")
         else:
             print("\n")
+def listRemoteOp(args):
+    argsD = vars(args)
+    host,user,token = tokUt.readConfig()
+    ty = argsD['type']
+    req = CredS.get_CredentialODS(ty,token,host)
+    print(req)
 
-
+def listRemoteEndOp(args):
+    argsD = vars(args)
+    host,user,token = tokUt.readConfig()
+    ty = argsD['type']
+    req = CredS.get_CredentialEnd(ty,token,host,user)
+    print(req)
 
 def parseArgFunc():
     #defining top level parser
@@ -85,8 +96,13 @@ def parseArgFunc():
     addRemote.add_argument("-path",default="/",dest="path")     #DEFAULT PATH == /
 
     listRemotes = subparser.add_parser("listRemotes")
-    listRemotes.add_argument("-host")
-    listRemotes.add_argument("-type")
+    listRemotes.set_defaults(func=listRemoteOp)
+    #listRemotes.add_argument("-host")
+    listRemotes.add_argument("-type",required=True,dest="type")
+
+    listRemotesEnd = subparser.add_parser("listRemotesEndpoint")
+    listRemotesEnd.set_defaults(func=listRemoteEndOp)
+    listRemotesEnd.add_argument("-type",required=True,dest="type")
 
     login = subparser.add_parser("login")
     login.set_defaults(func=loginUser)

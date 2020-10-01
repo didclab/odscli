@@ -23,15 +23,32 @@ class CredService:
 
         requests.post(credFormated, cookies=cookies,json=body)
 
-    def get_Credential(type:EndpointType,uri:str):
+    def get_CredentialODS(type:EndpointType,atok,hostname):
 
-        #credPath = "http://"+hostname+":8080/api/cred/{type}"
-        credPath = "http://"+hostname+":8081"+constants.CRED_ACCOUNT_GETV2
+        credPath = "http://"+hostname+":"+constants.PORT+constants.CRED_ACCOUNT_REGISTERV2
+        #credPath = "http://"+hostname+":8081"+constants.CRED_ACCOUNT_GETV2
 
-        #credFormated = credPath.format(type=typeE,userId=)
+        credFormated = credPath.format(type=type)
 
-        #req = requests.get(credFormated)
+        cookies = dict(ATOKEN=atok)
+        headers = {"Authorization": "Bearer "+atok+""}
+
+        req = requests.get(credFormated,headers=headers, cookies=cookies)
         return req.json()
+
+    def get_CredentialEnd(type,atok,hostname,user):
+        credPath = "http://"+hostname+":"+"8081"+constants.CRED_ACCOUNT_GETV2
+        #credPath = "http://"+hostname+":8081"+constants.CRED_ACCOUNT_GETV2
+
+        credFormated = credPath.format(type=type,userId=user)
+
+        cookies = dict(ATOKEN=atok)
+        headers = {"Authorization": "Bearer "+atok+""}
+
+        req = requests.get(credFormated,headers=headers, cookies=cookies)
+        return req.json()
+
+
 
     def get_OAUTHCredential():
         ## TODO:
