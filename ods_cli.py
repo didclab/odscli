@@ -1,11 +1,9 @@
 #CLI IMPORTS
 import argparse
 import os
-import asyncio
 import json
 import pprint
 from datetime import datetime
-from SDK.cli_interface import ODSCLI
 #SDK IMPORTS
 import SDK.token_utils as tokUt
 from SDK.credential_service import CredService as CredS
@@ -17,13 +15,6 @@ from SDK.endpoint import Endpoint as endpoint
 #import SDK.transfer.item
 
 
-
-
-#Initilization of Interative CLI
-async def init(args):
-    #Creates Command line interface
-    cli = ODSCLI
-    await cli.run()
 def getOAuthUrlOp(args):
     argsD = vars(args)
     host,user,token = tokUt.readConfig()
@@ -227,9 +218,6 @@ if __name__ == '__main__':
     if not vars(args):
         if not os.geteuid() == 0:
             raise PermissionError('This Client must be run with super user permissions')
-        #creating event loop for command prompt and start init with the arguments passed in
-        prompt = asyncio.get_event_loop()
-        prompt.run_until_complete(init(args))
     else:
         #DEBUG
         #rint("Called Arg Function")
