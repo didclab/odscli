@@ -68,13 +68,21 @@ def transferOp(args):
       #}
     #}
 
-
+    json = False
     hostname = argsD['hostname']
-    jobID,ownerID,chunkSize = argsD['jobID'],argsD['ownerID'],int(argsD['chunkSize'])
-    sourceType,sourceUsername,sourceSecret,sourceURI,sourceEncrypSecret,sourcePinfoPath,sourceinfoListPath,sourceinfoListSize = argsD['sourceType'],argsD['sourceUsername'],argsD['sourceSecret'],argsD['sourceURI'],argsD['sourceEncrypSecret'],argsD['sourcePinfoPath'],argsD['sourceinfoListPath'],argsD['sourceinfoListSize']
-    destType,destUsername,destSecret,destURI,destEncrypSecret,destPinfoPath=argsD['destType'],argsD['destUsername'],argsD['destSecret'],argsD['destURI'],argsD['destEncrypSecret'],argsD['destPinfoPath']
-    optConcurrency,optPipesize,optRetry= int(argsD['optConcurrency']),int(argsD['optPipesize']),int(argsD['optRetry'])
-    bodynew = {
+
+    try:
+        bodyJSON = argsD['json']
+        print(bodyJSON)
+        json=True
+    except Exception as e:
+        print("NoJSON")
+        json=False
+        jobID,ownerID,chunkSize = argsD['jobID'],argsD['ownerID'],int(argsD['chunkSize'])
+        sourceType,sourceUsername,sourceSecret,sourceURI,sourceEncrypSecret,sourcePinfoPath,sourceinfoListPath,sourceinfoListSize = argsD['sourceType'],argsD['sourceUsername'],argsD['sourceSecret'],argsD['sourceURI'],argsD['sourceEncrypSecret'],argsD['sourcePinfoPath'],argsD['sourceinfoListPath'],argsD['sourceinfoListSize']
+        destType,destUsername,destSecret,destURI,destEncrypSecret,destPinfoPath=argsD['destType'],argsD['destUsername'],argsD['destSecret'],argsD['destURI'],argsD['destEncrypSecret'],argsD['destPinfoPath']
+        optConcurrency,optPipesize,optRetry= int(argsD['optConcurrency']),int(argsD['optPipesize']),int(argsD['optRetry'])
+        bodynew = {
     "jobId": jobID,
     "ownerId": ownerID,
 	"chunkSize" : chunkSize,
@@ -116,13 +124,17 @@ def transferOp(args):
 		}
     }
     #jsOb = json.loads(body)
-    pp = pprint.PrettyPrinter(indent = 3)
-    pp.pprint(bodynew)
+    pp = pprint.PrettyPrinter(indent = 0)
     print("\n\nResponse: String ID")
     hoststring = "http://"+hostname+":8092/api/v1/transfer"
     print("\n")
     print(hoststring)
-    r = requests.post(hoststring,data = bodynew)
+    if not(json):
+        r = requests.post(hoststring,data = bodynew)
+    else:
+        r = requests.post(hoststring,data = bodyJSON)
+
+
     print(r.status_code)
     print("\n\n")
     print(r)
@@ -260,27 +272,28 @@ def parseArgFunc():
 
     transfer = subparser.add_parser("transfer")
     transfer.set_defaults(func=transferOp)
-    transfer.add_argument("-hostname",required=True)
-    transfer.add_argument("-jobID",required=True)
-    transfer.add_argument("-ownerID",required=True)
-    transfer.add_argument("-chunkSize",required=True)
-    transfer.add_argument("-sourceType",required=True)
-    transfer.add_argument("-sourceUsername",required=True)
-    transfer.add_argument("-sourceSecret",required=True)
-    transfer.add_argument("-sourceURI",required=True)
-    transfer.add_argument("-sourceEncrypSecret",required=True)
-    transfer.add_argument("-sourcePinfoPath",required=True)
-    transfer.add_argument("-sourceinfoListPath",required=True)
-    transfer.add_argument("-sourceinfoListSize",required=True)
-    transfer.add_argument("-destType",required=True)
-    transfer.add_argument("-destUsername",required=True)
-    transfer.add_argument("-destSecret",required=True)
-    transfer.add_argument("-destURI",required=True)
-    transfer.add_argument("-destEncrypSecret",required=True)
-    transfer.add_argument("-destPinfoPath",required=True)
-    transfer.add_argument("-optConcurrency",required=True)
-    transfer.add_argument("-optPipesize",required=True)
-    transfer.add_argument("-optRetry",required=True)
+    transfer.add_argument("-hostname",required=False)
+    transfer.add_argument("-jobID",required=False)
+    transfer.add_argument("-ownerID",required=False)
+    transfer.add_argument("-chunkSize",required=False)
+    transfer.add_argument("-sourceType",required=False)
+    transfer.add_argument("-sourceUsername",required=False)
+    transfer.add_argument("-sourceSecret",required=False)
+    transfer.add_argument("-sourceURI",required=False)
+    transfer.add_argument("-sourceEncrypSecret",required=False)
+    transfer.add_argument("-sourcePinfoPath",required=False)
+    transfer.add_argument("-sourceinfoListPath",required=False)
+    transfer.add_argument("-sourceinfoListSize",required=False)
+    transfer.add_argument("-destType",required=False)
+    transfer.add_argument("-destUsername",required=False)
+    transfer.add_argument("-destSecret",required=False)
+    transfer.add_argument("-destURI",required=False)
+    transfer.add_argument("-destEncrypSecret",required=False)
+    transfer.add_argument("-destPinfoPath",required=False)
+    transfer.add_argument("-optConcurrency",required=False)
+    transfer.add_argument("-optPipesize",required=False)
+    transfer.add_argument("-optRetry",required=False)
+    transfer.add_argument("-json")
     #transfer.add_argument("-Stype")
     #transfer.add_argument("-ScredId")
     #transfer.add_argument("-Sinfo",default="{'id':'','path':'','size':''}")
