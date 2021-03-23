@@ -3,6 +3,7 @@ import argparse
 import os
 import json
 import pprint
+import requests
 from datetime import datetime
 #SDK IMPORTS
 import SDK.token_utils as tokUt
@@ -29,48 +30,116 @@ def getOAuthUrlOp(args):
 
 def transferOp(args):
     argsD = vars(args)
-    source = argsD["S"]
-    dest = argsD["D"]
-    Stype = source[0:source.find(':')]
-    ScredId = source[source.find(':')+1:source.find('@')]
-    Sinfo = "'id':'','path':'{}','size':''".format(source[source.rindex('@')+1:])
-    Sinfo = "{"+Sinfo+"}"
-    Dtype = dest[0:dest.find(':')]
-    DcredId = dest[dest.find(':')+1:dest.find('@')]
-    Dinfo = "'id':'','path':'{}','size':''".format(dest[dest.rindex('@')+1:])
+    #source = argsD["S"]
+    #dest = argsD["D"]
+    #Stype = source[0:source.find(':')]
+    #ScredId = source[source.find(':')+1:source.find('@')]
+    #Sinfo = "'id':'','path':'{}','size':''".format(source[source.rindex('@')+1:])
+    #Sinfo = "{"+Sinfo+"}"
+    #Dtype = dest[0:dest.find(':')]
+    #DcredId = dest[dest.find(':')+1:dest.find('@')]
+    #Dinfo = "'id':'','path':'{}','size':''".format(dest[dest.rindex('@')+1:])
 
-    host, user, token = tokUt.readConfig()
-    body = {
-      "request": {
-        "source": {
-          "type": Stype,
-          "credId": ScredId,
-          "info": Sinfo,
-          "infoList":Sinfo
+    #host, user, token = tokUt.readConfig()
+    #body = {
+      #"request": {
+        #"source": {
+          #"type": Stype,
+          #"credId": ScredId,
+          #"info": Sinfo,
+          #"infoList":Sinfo
+        #},
+        #"destination": {
+          #"type": Dtype,
+          #"credId": DcredId,
+          #"info": Dinfo
+        #},
+        #"options": {
+          #"compress": True,
+          #"encrypt": True,
+          #"optimizer": "string",
+          #"overwrite": True,
+          #"retry": 0,
+          #"verify": True
+        #}
+      #},
+      #"principalMono": {
+        #"name": "string"
+      #}
+    #}
+
+
+    hostname = argsD['hostname']
+    jobID,ownerID,chunkSize = argsD['jobID'],argsD['ownerID'],int(argsD['chunkSize'])
+    sourceType,sourceUsername,sourceSecret,sourceURI,sourceEncrypSecret,sourcePinfoPath,sourceinfoListPath,sourceinfoListSize = argsD['sourceType'],argsD['sourceUsername'],argsD['sourceSecret'],argsD['sourceURI'],argsD['sourceEncrypSecret'],argsD['sourcePinfoPath'],argsD['sourceinfoListPath'],argsD['sourceinfoListSize']
+    destType,destUsername,destSecret,destURI,destEncrypSecret,destPinfoPath=argsD['destType'],argsD['destUsername'],argsD['destSecret'],argsD['destURI'],argsD['destEncrypSecret'],argsD['destPinfoPath']
+    optConcurrency,optPipesize,optRetry= int(argsD['optConcurrency']),int(argsD['optPipesize']),int(argsD['optRetry'])
+    bodynew = {
+    "jobId": jobID,
+    "ownerId": ownerID,
+	"chunkSize" : chunkSize,
+    "source": {
+        "type": sourceType,
+        "vfsSourceCredential": {
+            "username" : sourceUsername,
+            "secret" : sourceSecret,
+			"uri" : sourceURI,
+			"encryptedSecret": sourceEncrypSecret
         },
-        "destination": {
-          "type": Dtype,
-          "credId": DcredId,
-          "info": Dinfo
+        "parentInfo": {
+            "path": sourcePinfoPath
         },
-        "options": {
-          "compress": True,
-          "encrypt": True,
-          "optimizer": "string",
-          "overwrite": True,
-          "retry": 0,
-          "verify": True
+        "infoList": [
+					  {
+							"path": sourceinfoListPath,
+							"size": sourceinfoListSize
+					  }
+
+        ]
+    },
+    "destination": {
+        "type": destType,
+        "vfsDestCredential": {
+            "username" : destUsername,
+            "secret" : destSecret,
+			"uri" : destURI,
+			"encryptedSecret": destEncrypSecret
+        },
+        "parentInfo": {
+            "path": destPinfoPath
         }
-      },
-      "principalMono": {
-        "name": "string"
-      }
+    },
+	"options": {
+			"concurrencyThreadCount": 3,
+			"pipeSize" : 50,
+			"retry" : 2
+		}
     }
     #jsOb = json.loads(body)
     pp = pprint.PrettyPrinter(indent = 3)
-    pp.pprint(body)
+    pp.pprint(bodynew)
     print("\n\nResponse: String ID")
+    hoststring = "http://"+hostname+":8092/api/v1/transfer"
+    print("\n")
+    print(hoststring)
+    r = requests.post(hoststring,data = bodynew)
+    print(r.status_code)
+    print("\n\n")
+    print(r)
     #print(body)
+
+def jobQueryOp(args):
+    argsD = vars(args)
+    hostname, jobName, stepName, instanceID, isDirectory = argsD['hostname'],argsD['jobName'],argsD['stepName'],argsD['instanceID'],argsD['isDirectory']
+    body = {"jobName":jobName,"instanceId":instanceID,"stepName":stepName,"isDirectory":isDirectory}
+    hoststring = "http://"+hostname+":8092/api/v1/query/job_status"
+    print("\n")
+    print(hoststring)
+    r = requests.post(hoststring,body)
+    print(r.status_code)
+    print("\n\n")
+    print(r)
+
 
 def mkdirOp(args):
     argsD = vars(args)
@@ -191,8 +260,27 @@ def parseArgFunc():
 
     transfer = subparser.add_parser("transfer")
     transfer.set_defaults(func=transferOp)
-    transfer.add_argument("-S")
-    transfer.add_argument("-D")
+    transfer.add_argument("-hostname",required=True)
+    transfer.add_argument("-jobID",required=True)
+    transfer.add_argument("-ownerID",required=True)
+    transfer.add_argument("-chunkSize",required=True)
+    transfer.add_argument("-sourceType",required=True)
+    transfer.add_argument("-sourceUsername",required=True)
+    transfer.add_argument("-sourceSecret",required=True)
+    transfer.add_argument("-sourceURI",required=True)
+    transfer.add_argument("-sourceEncrypSecret",required=True)
+    transfer.add_argument("-sourcePinfoPath",required=True)
+    transfer.add_argument("-sourceinfoListPath",required=True)
+    transfer.add_argument("-sourceinfoListSize",required=True)
+    transfer.add_argument("-destType",required=True)
+    transfer.add_argument("-destUsername",required=True)
+    transfer.add_argument("-destSecret",required=True)
+    transfer.add_argument("-destURI",required=True)
+    transfer.add_argument("-destEncrypSecret",required=True)
+    transfer.add_argument("-destPinfoPath",required=True)
+    transfer.add_argument("-optConcurrency",required=True)
+    transfer.add_argument("-optPipesize",required=True)
+    transfer.add_argument("-optRetry",required=True)
     #transfer.add_argument("-Stype")
     #transfer.add_argument("-ScredId")
     #transfer.add_argument("-Sinfo",default="{'id':'','path':'','size':''}")
@@ -201,6 +289,14 @@ def parseArgFunc():
     #transfer.add_argument("-DcredId")
     #transfer.add_argument("-Dinfo",default="{'id':'','path':'','size':''}")
     #transfer.add_argument()
+
+    jobQuery = subparser.add_parser("jobQuery")
+    jobQuery.set_defaults(func=jobQueryOp)
+    jobQuery.add_argument("-hostname")
+    jobQuery.add_argument("-jobName")
+    jobQuery.add_argument("-instanceID")
+    jobQuery.add_argument("-stepName")
+    jobQuery.add_argument("-isDirectory")
 
     getOAuthUrl = subparser.add_parser("getOAuthUrl")
     getOAuthUrl.set_defaults(func=getOAuthUrlOp)
