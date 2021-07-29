@@ -15,6 +15,7 @@ from SDK.endpoint import Endpoint as endpoint
 #import SDK.transfer.destination
 #import SDK.transfer.item
 
+## TODO: Add exceptions or text so users cannot use other functions when not logged in
 
 def getOAuthUrlOp(args):
     argsD = vars(args)
@@ -30,115 +31,58 @@ def getOAuthUrlOp(args):
 
 def transferOp(args):
     argsD = vars(args)
-    #source = argsD["S"]
-    #dest = argsD["D"]
-    #Stype = source[0:source.find(':')]
-    #ScredId = source[source.find(':')+1:source.find('@')]
-    #Sinfo = "'id':'','path':'{}','size':''".format(source[source.rindex('@')+1:])
-    #Sinfo = "{"+Sinfo+"}"
-    #Dtype = dest[0:dest.find(':')]
-    #DcredId = dest[dest.find(':')+1:dest.find('@')]
-    #Dinfo = "'id':'','path':'{}','size':''".format(dest[dest.rindex('@')+1:])
+    source = argsD["Source"]
+    dest = argsD["Destination"]
+    Stype = source[0:source.find(':')]
+    ScredId = source[source.find(':')+1:source.find('@')]
+    Sinfo = "'id':'','path':'{}','size':''".format(source[source.rindex('@')+1:])
+    Sinfo = "{"+Sinfo+"}"
+    Dtype = dest[0:dest.find(':')]
+    DcredId = dest[dest.find(':')+1:dest.find('@')]
+    Dinfo = "'id':'','path':'{}','size':''".format(dest[dest.rindex('@')+1:])
 
-    #host, user, token = tokUt.readConfig()
-    #body = {
-      #"request": {
-        #"source": {
-          #"type": Stype,
-          #"credId": ScredId,
-          #"info": Sinfo,
-          #"infoList":Sinfo
-        #},
-        #"destination": {
-          #"type": Dtype,
-          #"credId": DcredId,
-          #"info": Dinfo
-        #},
-        #"options": {
-          #"compress": True,
-          #"encrypt": True,
-          #"optimizer": "string",
-          #"overwrite": True,
-          #"retry": 0,
-          #"verify": True
-        #}
-      #},
-      #"principalMono": {
-        #"name": "string"
-      #}
-    #}
-
-    json = False
+    host, user, token = tokUt.readConfig()
+    body = {
+      "request": {
+        "source": {
+          "type": Stype,
+          "credId": ScredId,
+          "parentInfo": {
+            "id":"",
+            "path":""
+          },
+          "infoList":[{}]
+        },
+        "destination": {
+          "type": Dtype,
+          "credId": DcredId,
+          "parentInfo": {
+          "id":"",
+          "path":""
+          }
+        },
+        "options": {
+          "concurrencyThreadCount":1,
+          "pipeSize":1,
+          "chunkSize":1,
+          "retry": 0
+        }
+      }
+    }
     hostname = argsD['hostname']
 
-    try:
-        bodyJSON = argsD['json']
-        print(bodyJSON)
-        json=True
-    except Exception as e:
-        print("NoJSON")
-        json=False
-        jobID,ownerID,chunkSize = argsD['jobID'],argsD['ownerID'],int(argsD['chunkSize'])
-        sourceType,sourceUsername,sourceSecret,sourceURI,sourceEncrypSecret,sourcePinfoPath,sourceinfoListPath,sourceinfoListSize = argsD['sourceType'],argsD['sourceUsername'],argsD['sourceSecret'],argsD['sourceURI'],argsD['sourceEncrypSecret'],argsD['sourcePinfoPath'],argsD['sourceinfoListPath'],argsD['sourceinfoListSize']
-        destType,destUsername,destSecret,destURI,destEncrypSecret,destPinfoPath=argsD['destType'],argsD['destUsername'],argsD['destSecret'],argsD['destURI'],argsD['destEncrypSecret'],argsD['destPinfoPath']
-        optConcurrency,optPipesize,optRetry= int(argsD['optConcurrency']),int(argsD['optPipesize']),int(argsD['optRetry'])
-        bodynew = {
-    "jobId": jobID,
-    "ownerId": ownerID,
-	"chunkSize" : chunkSize,
-    "source": {
-        "type": sourceType,
-        "vfsSourceCredential": {
-            "username" : sourceUsername,
-            "secret" : sourceSecret,
-			"uri" : sourceURI,
-			"encryptedSecret": sourceEncrypSecret
-        },
-        "parentInfo": {
-            "path": sourcePinfoPath
-        },
-        "infoList": [
-					  {
-							"path": sourceinfoListPath,
-							"size": sourceinfoListSize
-					  }
-
-        ]
-    },
-    "destination": {
-        "type": destType,
-        "vfsDestCredential": {
-            "username" : destUsername,
-            "secret" : destSecret,
-			"uri" : destURI,
-			"encryptedSecret": destEncrypSecret
-        },
-        "parentInfo": {
-            "path": destPinfoPath
-        }
-    },
-	"options": {
-			"concurrencyThreadCount": 3,
-			"pipeSize" : 50,
-			"retry" : 2
-		}
-    }
-    #jsOb = json.loads(body)
+    jsOb = json.loads(body)
     pp = pprint.PrettyPrinter(indent = 0)
-    print("\n\nResponse: String ID")
-    hoststring = "http://"+hostname+":8092/api/v1/transfer"
+    hoststring = "http://"+hostname+":8080/api/transferjob"
     print("\n")
-    print(hoststring)
-    if not(json):
-        r = requests.post(hoststring,data = bodynew)
-    else:
-        r = requests.post(hoststring,data = bodyJSON)
-
-
-    print(r.status_code)
+    print(body)
+    print(hoststring)#DEBUG
+    #r = requests.post(hoststring,json = jsOb)
+    #print(r.status_code)#DEBUG
     print("\n\n")
     print(r)
     #print(body)
+
 
 def jobQueryOp(args):
     argsD = vars(args)
@@ -167,9 +111,12 @@ def loginUser(args):
     argD = vars(args)
     work,tok = tokUt.login(host=argD['hostname'],user=argD['user'],password=argD['passw'])
     if work:
-        return True
+        print("\nSuccessfully Logged In!\n")
     else:
-        return False
+        print("\nProblem Logging In\n")
+def logoutUser(args):
+    tokUt.logout()
+    print("\nLogged Out\n")
 
 def addRemoteEnd(args):
     argsD = vars(args)
@@ -182,8 +129,23 @@ def addRemoteEnd(args):
     if isOAuth:
         CredS.oauth_Url(host,typeE,token)
     else:
-        CredS.register_Credential(host,typeE,argsD['host'],argsD['path'],argsD['user'],argsD['passw'],token)
-
+        CredS.register_Credential(host,typeE,argsD['accountID'],argsD['host'],argsD['user'],argsD['passw'],token)
+def deleteRemoteEnd(args):
+    argsD = vars(args)
+    try:
+        typeE,isOAuth = endpoint.type_handle(argsD["type"])
+    except:
+        print("Type Error")
+        return
+    host,user,token = tokUt.readConfig()
+    if isOAuth:
+        print("deleting oauth credentials is not supported yet")
+    else:
+        req = CredS.delete_CredentialODS(typeE,argsD["credID"],token,host)
+        if req.status_code != 200:
+            print("error with deleting")
+        elif req.status_code == 200:
+            print("Credential Deleted")
 def listOp(args):
     #print(args)
     argsD = vars(args)
@@ -191,6 +153,7 @@ def listOp(args):
     r,p = argsD['type:remote@path'].split('@')
     t,r = r.split(':')
     jsonstr = endpoint.list(r,p,p,host,t,token)
+    #print(jsonstr)#DEBUG
     jsonOb = json.loads(jsonstr)
     diction = jsonOb
     pad = len(str(diction.get("size")))
@@ -253,16 +216,17 @@ def parseArgFunc():
     addRemote.add_argument("-pass",default="",dest="passw")
     addRemote.add_argument("-host",default="",dest="host")
     addRemote.add_argument("-type",required=True,dest="type")
-    addRemote.add_argument("-path",default="/",dest="path")     #DEFAULT PATH == /
+    addRemote.add_argument("-accountID",dest="accountID")     #DEFAULT PATH == /
 
     listRemotes = subparser.add_parser("listRemotes")
     listRemotes.set_defaults(func=listRemoteOp)
     #listRemotes.add_argument("-host")
     listRemotes.add_argument("-type",required=True,dest="type")
 
-    listRemotesEnd = subparser.add_parser("listRemotesEndpoint")
-    listRemotesEnd.set_defaults(func=listRemoteEndOp)
-    listRemotesEnd.add_argument("-type",required=True,dest="type")
+    deleteRemote = subparser.add_parser("deleteRemote")
+    deleteRemote.set_defaults(func=deleteRemoteEnd)
+    deleteRemote.add_argument("-type",required=True,dest="type")
+    deleteRemote.add_argument("-credID",required=True,dest="credID")
 
     login = subparser.add_parser("login")
     login.set_defaults(func=loginUser)
@@ -270,30 +234,14 @@ def parseArgFunc():
     login.add_argument("-pass",required=True,dest="passw")
     login.add_argument("-host",dest="hostname",default="onedatashare.org")      #DEFAULT HOST == onedatashare.org
 
+    #NEW FEATURE Logout
+    logout = subparser.add_parser("logout")
+    logout.set_defaults(func=logoutUser)
+
+
     transfer = subparser.add_parser("transfer")
     transfer.set_defaults(func=transferOp)
     transfer.add_argument("-hostname",required=False)
-    transfer.add_argument("-jobID",required=False)
-    transfer.add_argument("-ownerID",required=False)
-    transfer.add_argument("-chunkSize",required=False)
-    transfer.add_argument("-sourceType",required=False)
-    transfer.add_argument("-sourceUsername",required=False)
-    transfer.add_argument("-sourceSecret",required=False)
-    transfer.add_argument("-sourceURI",required=False)
-    transfer.add_argument("-sourceEncrypSecret",required=False)
-    transfer.add_argument("-sourcePinfoPath",required=False)
-    transfer.add_argument("-sourceinfoListPath",required=False)
-    transfer.add_argument("-sourceinfoListSize",required=False)
-    transfer.add_argument("-destType",required=False)
-    transfer.add_argument("-destUsername",required=False)
-    transfer.add_argument("-destSecret",required=False)
-    transfer.add_argument("-destURI",required=False)
-    transfer.add_argument("-destEncrypSecret",required=False)
-    transfer.add_argument("-destPinfoPath",required=False)
-    transfer.add_argument("-optConcurrency",required=False)
-    transfer.add_argument("-optPipesize",required=False)
-    transfer.add_argument("-optRetry",required=False)
-    transfer.add_argument("-json")
     #transfer.add_argument("-Stype")
     #transfer.add_argument("-ScredId")
     #transfer.add_argument("-Sinfo",default="{'id':'','path':'','size':''}")
@@ -302,6 +250,9 @@ def parseArgFunc():
     #transfer.add_argument("-DcredId")
     #transfer.add_argument("-Dinfo",default="{'id':'','path':'','size':''}")
     #transfer.add_argument()
+    transfer.add_argument("-Source",required=True)
+    transfer.add_argument("-Destination",required=True)
+
 
     jobQuery = subparser.add_parser("jobQuery")
     jobQuery.set_defaults(func=jobQueryOp)

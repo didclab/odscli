@@ -29,6 +29,13 @@ class CredService:
         headers = {"Authorization": "Bearer "+atok+""}
         req = requests.get(reqFormated,headers=headers, cookies=cookies)
         return req.json()
+    def delete_CredentialODS(type:EndpointType,credID,atok,hostname):
+        req = "http://"+hostname+":"+constants.PORT+constants.CRED_ACCOUNT_DELETE
+        reqFormated = req.format(type=type,credID=credID)
+        cookies = dict(ATOKEN=atok)
+        headers = {"Authorization": "Bearer "+atok+""}
+        req = requests.delete(reqFormated,headers=headers, cookies=cookies)
+        return req
 
     def get_CredentialEnd(type,atok,hostname,user):
         req = "http://"+hostname+":"+"8081"+constants.CRED_ACCOUNT_GETV2
@@ -36,7 +43,7 @@ class CredService:
         cookies = dict(ATOKEN=atok)
         headers = {"Authorization": "Bearer "+atok+""}
         req = requests.get(reqFormated,headers=headers, cookies=cookies)
-        return req.json()
+        return req
 
 
 

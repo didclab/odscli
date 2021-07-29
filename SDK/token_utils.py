@@ -31,7 +31,6 @@ def isValidUser(host:str,email:str)->bool:
     isValidURL = "http://"+host+":"+constants.PORT+constants.VALIDATE_EMAILV2
     body = {'email':email}
     req = requests.post(isValidURL,json=body)
-    print(req.json())
     return req.json()
 
 
@@ -39,11 +38,10 @@ def login(host,user,password):
     if isValidUser(host,user):
         loginURL = "http://"+host+":"+constants.PORT+constants.AUTHENTICATEV2
         body = {'email':user,'password':password}
-        print(loginURL)
         req = requests.post(loginURL,json=body)
-        print(req.status_code)
         atoken = req.cookies.get_dict()
-        print(atoken)
+        print("\nUser Authentication Token:")
+        print(atoken['ATOKEN'])
         if req.status_code==200:
             writeConfig(host,user,atoken.get('ATOKEN'))
             return True,atoken.get('ATOKEN')
@@ -54,3 +52,5 @@ def login(host,user,password):
         #Debug
         print("Not Valid User")
         return False,""
+def logout():
+    writeConfig('','','')
