@@ -6,6 +6,7 @@ from enum import Enum
 import SDK.constants as constants
 
 class EndpointType(Enum):
+    VFS = "vfs"
     SFTP = "sftp"
     FTP = "ftp"
     S3 = "s3"
@@ -40,7 +41,7 @@ class Endpoint():
         reqForm = req.format(type=type)
         cookies = dict(ATOKEN=atok)
         body={'credId':remoteHost,'path':path,'identifier':identifier}
-        req = requests.get(reqForm,params=body,cookies=cookies)
+        req = requests.get(reqForm,params=body,cookies=cookies)# Needs to be handled better for errors
         return req.text
 
     def mkdir(remoteHost, path, identifier, host, type, atok,dirToAdd) -> str:
@@ -48,7 +49,7 @@ class Endpoint():
         reqForm = req.format(type=type)
         cookies = dict(ATOKEN=atok)
         body={'credId':remoteHost,'path':path,'id':identifier,'folderToCreate':dirToAdd}
-        reqs = requests.post(reqForm,json=body,cookies=cookies)
+        reqs = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
         return reqs.text
 
     def remove(remoteHost, path, identifier, host, type, atok,filename) -> str:
@@ -56,22 +57,5 @@ class Endpoint():
         reqForm = req.format(type=type)
         cookies = dict(ATOKEN=atok)
         body={'credId':remoteHost,'path':path,'id':identifier,'toDelete':filename}
-        reqs = requests.post(reqForm,json=body,cookies=cookies)
+        reqs = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
         return req
-
-    def download(remoteHost, path, identifier, host, type, atok,filename) -> str:
-        req = "http://"+host+":"+constants.PORT+constants.DOWNLOADV2
-        reqForm = req.format(type=type)
-        cookies = dict(ATOKEN=atok)
-        body={'credId':remoteHost,'path':path,'id':identifier,'fileToDownload':filename}
-        reqs = requests.post(reqForm,json=body,cookies=cookies)
-        return req
-
-    @abstractmethod
-    def upload(self, payload) -> bool:
-        #POST requests
-        #multipart/form-data
-        #qqfile , qquuid , qqfilename , qqpartindex , qqtotalparts , qqtotalfilesize , directoryPath ,
-        #credential , id , map , principalMono
-        #Response: "success,error"
-        raise NotImplemented()

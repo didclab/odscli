@@ -30,7 +30,7 @@ def readConfig():
 def isValidUser(host:str,email:str)->bool:
     isValidURL = "http://"+host+":"+constants.PORT+constants.VALIDATE_EMAILV2
     body = {'email':email}
-    req = requests.post(isValidURL,json=body)
+    req = requests.post(isValidURL,json=body)# Needs to be handled better for errors
     return req.json()
 
 
@@ -39,18 +39,19 @@ def login(host,user,password):
         loginURL = "http://"+host+":"+constants.PORT+constants.AUTHENTICATEV2
         body = {'email':user,'password':password}
         req = requests.post(loginURL,json=body)
-        atoken = req.cookies.get_dict()
-        print("\nUser Authentication Token:")
-        print(atoken['ATOKEN'])
+        atoken = req.cookies.get_dict()# Needs to be handled better for errors
+        if req.status_code != 200:
+            print("\nError Handling Login\n")
+            if req.status_code == 401:
+                print("Possibly Bad Password")
+            return False,""
+        print("\nUser Authentication Token:")# Move this TO THE CLI SIDE
+        print(atoken['ATOKEN'])# Move this TO THE CLI SIDE
         if req.status_code==200:
             writeConfig(host,user,atoken.get('ATOKEN'))
             return True,atoken.get('ATOKEN')
-        else:
-            print("Error Handling Login")
-            return False,""
     else:
-        #Debug
         print("Not Valid User")
         return False,""
 def logout():
-    writeConfig('','','')
+    writeConfig('None','None','None')

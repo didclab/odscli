@@ -10,17 +10,29 @@ import SDK.token_utils as tokUt
 from SDK.credential_service import CredService as CredS
 import SDK.endpoint
 from SDK.endpoint import Endpoint as endpoint
-#import SDK.transfer.transfer
-#import SDK.transfer.source
-#import SDK.transfer.destination
-#import SDK.transfer.item
+from SDK.transfer import TransferRequest
+from SDK.transfer import TransferOptions
+from SDK.transfer import Source
+from SDK.transfer import Destination
+from SDK.transfer import Iteminfo
+from SDK.transfer import Transfer as Transfer
 
 ## TODO: Add exceptions or text so users cannot use other functions when not logged in
+def loadConfig():
+    try:
+        host,user,token = tokUt.readConfig()
+    except KeyError:                            #THIS SHOULD PROBABLY MOVE TO TOKEN UTILS
+        print("User not logged in, No Config")
+        exit()
+    if host and user and token == 'None':
+        print("User not logged in, Cleared Config")
+        exit()
+    return host,user,token
+
 
 def getOAuthUrlOp(args):
-    argsD = vars(args)
-    host,user,token = tokUt.readConfig()
-    ty = argsD['type']
+    host,user,token = loadConfig()
+    ty = args['type']
     try:
         typeE,isOAuth = endpoint.type_handle(ty)
     except:
@@ -29,63 +41,21 @@ def getOAuthUrlOp(args):
     req = CredS.oauth_Url(host,typeE,token)
     #print(req)
 
-def transferOp(args):
-    argsD = vars(args)
-    source = argsD["Source"]
-    dest = argsD["Destination"]
-    Stype = source[0:source.find(':')]
-    ScredId = source[source.find(':')+1:source.find('@')]
-    Sinfo = "'id':'','path':'{}','size':''".format(source[source.rindex('@')+1:])
-    Sinfo = "{"+Sinfo+"}"
-    Dtype = dest[0:dest.find(':')]
-    DcredId = dest[dest.find(':')+1:dest.find('@')]
-    Dinfo = "'id':'','path':'{}','size':''".format(dest[dest.rindex('@')+1:])
-
-    host, user, token = tokUt.readConfig()
-    body = {
-      "request": {
-        "source": {
-          "type": Stype,
-          "credId": ScredId,
-          "parentInfo": {
-            "id":"",
-            "path":""
-          },
-          "infoList":[{}]
-        },
-        "destination": {
-          "type": Dtype,
-          "credId": DcredId,
-          "parentInfo": {
-          "id":"",
-          "path":""
-          }
-        },
-        "options": {
-          "concurrencyThreadCount":1,
-          "pipeSize":1,
-          "chunkSize":1,
-          "retry": 0
-        }
-      }
-    }
-    hostname = argsD['hostname']
-
-    jsOb = json.loads(body)
-    pp = pprint.PrettyPrinter(indent = 0)
-    hoststring = "http://"+hostname+":8080/api/transferjob"
-    print("\n")
-    print(body)
-    print(hoststring)#DEBUG
-    #r = requests.post(hoststring,json = jsOb)
-    #print(r.status_code)#DEBUG
-    print("\n\n")
-    print(r)
-    #print(body)
+#Transfer Operation
+#Inputs (Parsed Args Namespace)
+def transferOp(argsD):
+    host, user, token = loadConfig()
+    source = Source(argsD["Source_type"],argsD["Source_credID"],Iteminfo(argsD["Source_Path"],argsD["Source_Path"],0),Iteminfo(argsD["Source_File"],argsD["Source_File"],0))
+    source.type = argsD["Source_type"]
+    dest = Destination(argsD["Dest_type"],argsD["Dest_credID"],Iteminfo(argsD["Dest_Path"],argsD["Dest_Path"],0))
+    transfOp = TransferOptions(argsD["concurrency"],argsD["piping"],argsD["chunkSize"])
+    transfReq = TransferRequest(source,dest,transfOp,1)
+    r = Transfer.transfer(host,token,transfReq)
+    print("status code: "+str(r.status_code))
+    print(r.text)
 
 
-def jobQueryOp(args):
-    argsD = vars(args)
+def jobQueryOp(argsD):
     hostname, jobName, stepName, instanceID, isDirectory = argsD['hostname'],argsD['jobName'],argsD['stepName'],argsD['instanceID'],argsD['isDirectory']
     body = {"jobName":jobName,"instanceId":instanceID,"stepName":stepName,"isDirectory":isDirectory}
     hoststring = "http://"+hostname+":8092/api/v1/query/job_status"
@@ -98,18 +68,19 @@ def jobQueryOp(args):
 
 
 def mkdirOp(args):
-    argsD = vars(args)
-    host, user, token = tokUt.readConfig()
-    r,p = argsD['type:remote@path'].split('@')
-    t,r = r.split(':')
-    p,d = p[0:p.rindex('/')],p[p.rindex('/')+1:]
-    #print(host+"|"+p+"|"+d+"|"+r+"|")
+    host, user, token = loadConfig()
+    #r,p = args['type:remote@path'].split('@')
+    #t,r = r.split(':')
+    #p,d = p[0:p.rindex('/')],p[p.rindex('/')+1:]
+    r = args["credId"]
+    p = args["path"]
+    t = args["type"]
+    d = args["newDir"]
     ret = endpoint.mkdir(host, '/', p, r, t, token,d)
     print(ret)
 
 def loginUser(args):
-    argD = vars(args)
-    work,tok = tokUt.login(host=argD['hostname'],user=argD['user'],password=argD['passw'])
+    work,tok = tokUt.login(host=args['hostname'],user=args['user'],password=args['passw'])
     if work:
         print("\nSuccessfully Logged In!\n")
     else:
@@ -119,9 +90,8 @@ def logoutUser(args):
     print("\nLogged Out\n")
 
 def addRemoteEnd(args):
-    argsD = vars(args)
     try:
-        typeE,isOAuth = endpoint.type_handle(argsD["type"])
+        typeE,isOAuth = endpoint.type_handle(args["type"])
     except:
         print("Type Error")
         return
@@ -129,32 +99,37 @@ def addRemoteEnd(args):
     if isOAuth:
         CredS.oauth_Url(host,typeE,token)
     else:
-        CredS.register_Credential(host,typeE,argsD['accountID'],argsD['host'],argsD['user'],argsD['passw'],token)
+        #add code to see if its a keyfile or a password based credential using argsD["keyfile"]
+
+        CredS.register_Credential(host,typeE,args['accountID'],args['host'],args['user'],args['passw'],token)
+
+
 def deleteRemoteEnd(args):
-    argsD = vars(args)
     try:
-        typeE,isOAuth = endpoint.type_handle(argsD["type"])
+        typeE,isOAuth = endpoint.type_handle(args["type"])
     except:
         print("Type Error")
         return
-    host,user,token = tokUt.readConfig()
+    host,user,token = loadConfig()
     if isOAuth:
         print("deleting oauth credentials is not supported yet")
     else:
-        req = CredS.delete_CredentialODS(typeE,argsD["credID"],token,host)
+        req = CredS.delete_CredentialODS(typeE,args["credID"],token,host)# Needs to be handled better for errors
         if req.status_code != 200:
             print("error with deleting")
         elif req.status_code == 200:
             print("Credential Deleted")
+
+
 def listOp(args):
-    #print(args)
-    argsD = vars(args)
-    host,user,token = tokUt.readConfig()
-    r,p = argsD['type:remote@path'].split('@')
-    t,r = r.split(':')
-    jsonstr = endpoint.list(r,p,p,host,t,token)
-    #print(jsonstr)#DEBUG
-    jsonOb = json.loads(jsonstr)
+    host,user,token = loadConfig()
+    #r,p = args['type:remote@path'].split('@')
+    #t,r = r.split(':')
+    t = args["type"]
+    r = args["credId"]
+    p = args["path"]
+    jsonstr = endpoint.list(r,p,p,host,t,token)# Needs to be handled better for errors
+    jsonOb = json.loads(jsonstr)# Needs to be handled better for errors
     diction = jsonOb
     pad = len(str(diction.get("size")))
     padN = len(str(diction.get("name")))
@@ -170,91 +145,89 @@ def listOp(args):
     diction = diction.get('files')
     if argsD['print'] == 'json':
         print(json.dumps(jsonOb))
-
     else:
         for names in diction:
             formating = "{}\t{:>"+str(pad)+"}\t{}\t{}\t{:>"+str(padN)+"}\t{}\n"
             print(formating.format(names.get('permissions'),names.get('size'),datetime.fromtimestamp(names.get('time')),names.get('dir'),names.get('name'),names.get('id')))
 
-
 def listRemoteOp(args):
-    argsD = vars(args)
-    host,user,token = tokUt.readConfig()
-    ty = argsD['type']
-    req = CredS.get_CredentialODS(ty,token,host)
-    print(req)
+    host,user,token = loadConfig()
+    ty = args['type']
+    req = CredS.get_CredentialODS(ty,token,host) # Needs to be handled better for errors
+    print("Remotes:\n")
+    for cred in req["list"]:
+        print("\t"+cred)
 
+#Not needed, Used to list endpoints directly from credential service
 def listRemoteEndOp(args):
-    argsD = vars(args)
-    host,user,token = tokUt.readConfig()
-    ty = argsD['type']
-    req = CredS.get_CredentialEnd(ty,token,host,user)
+    host,user,token = loadConfig()
+    ty = args['type']
+    req = CredS.get_CredentialEnd(ty,token,host,user) # Needs to be handled better for errors
     print(req)
 
-
+#TODO add better help descriptions
 def parseArgFunc():
     #defining top level parser
     parser = argparse.ArgumentParser(description='OneDataShare Command Line Tool')
     #defining sub command parser
-    subparser = parser.add_subparsers(title="Commands",description="Commands to run",help="more help for commands")
+    subparser = parser.add_subparsers(title="Commands",description="Commands to manage OneDataShare",help="All commands have a help flag")
     #Adding parsers onto subparser and giving them arguments and functions
-    list = subparser.add_parser("list")
-    list.set_defaults(func=listOp)
-    #list.add_argument(":")
-    list.add_argument("type:remote@path")
-    list.add_argument("-p",dest='print')
-    #list.add_argument("-path",default="/",dest="path")
-
-    mkdir = subparser.add_parser("mkdir")
-    mkdir.set_defaults(func=mkdirOp)
-    #mkdir.add_argument(':')
-    mkdir.add_argument('type:remote@path')
-
-    addRemote = subparser.add_parser("addRemote")
-    addRemote.set_defaults(func=addRemoteEnd)
-    addRemote.add_argument("-user",default="",dest="user")
-    addRemote.add_argument("-pass",default="",dest="passw")
-    addRemote.add_argument("-host",default="",dest="host")
-    addRemote.add_argument("-type",required=True,dest="type")
-    addRemote.add_argument("-accountID",dest="accountID")     #DEFAULT PATH == /
-
-    listRemotes = subparser.add_parser("listRemotes")
-    listRemotes.set_defaults(func=listRemoteOp)
-    #listRemotes.add_argument("-host")
-    listRemotes.add_argument("-type",required=True,dest="type")
-
-    deleteRemote = subparser.add_parser("deleteRemote")
-    deleteRemote.set_defaults(func=deleteRemoteEnd)
-    deleteRemote.add_argument("-type",required=True,dest="type")
-    deleteRemote.add_argument("-credID",required=True,dest="credID")
-
-    login = subparser.add_parser("login")
+    login = subparser.add_parser("login",help="Login to OneDataShare backend, saves information to local file")
     login.set_defaults(func=loginUser)
-    login.add_argument("-user",required=True,dest="user")
-    login.add_argument("-pass",required=True,dest="passw")
-    login.add_argument("-host",dest="hostname",default="onedatashare.org")      #DEFAULT HOST == onedatashare.org
+    login.add_argument("-user",required=True,dest="user",help="Username for OneDataShare application (Website)")
+    login.add_argument("-pass",required=True,dest="passw",help="Password for OneDataShare application (Website)")
+    login.add_argument("-host",dest="hostname",default="onedatashare.org",help="Hostname for OneDataShare application (Default: onedatashare.org)")      #DEFAULT HOST == onedatashare.org
 
-    #NEW FEATURE Logout
-    logout = subparser.add_parser("logout")
+    logout = subparser.add_parser("logout",help="Logout of OneDataShare backend, clears information file")
     logout.set_defaults(func=logoutUser)
 
+    addRemote = subparser.add_parser("addRemote",help="Save a Credential to OneDataShare backend")
+    addRemote.set_defaults(func=addRemoteEnd)
+    addRemote.add_argument("-user",default="",dest="user",help="Username for remote endpoint")
+    addRemote.add_argument("-pass",default="",dest="passw",help="Password for remote endpoint")
+    addRemote.add_argument("-host",default="",dest="host",help="Hostname for remote endpoint")
+    addRemote.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
+    addRemote.add_argument("-credentialId",dest="accountID",help="Custom name for new remote endpoint credential")     #DEFAULT PATH == /
+    #add new argument for key file "-keyFile or something"
 
-    transfer = subparser.add_parser("transfer")
+    listRemotes = subparser.add_parser("listRemotes",help="List the saved remotes of a certain type")
+    listRemotes.set_defaults(func=listRemoteOp)
+    listRemotes.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
+
+    deleteRemote = subparser.add_parser("deleteRemote",help="Delete a saved remote")
+    deleteRemote.set_defaults(func=deleteRemoteEnd)
+    deleteRemote.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
+    deleteRemote.add_argument("-credentialId",required=True,dest="credID",help="Credential name for remote endpoint")
+
+    list = subparser.add_parser("list",help="List the contents of a remote")
+    list.set_defaults(func=listOp)
+    list.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
+    list.add_argument("-credentialId",required=True,dest="credId",help="Credential name for remote endpoint")
+    list.add_argument("-path",required=False,dest="path",default="/",help="Path for remote endpoint (default: / )")
+    list.add_argument("-p",dest='print',help="(OPTIONAL)Print option, Default: Pretty Print, Optional{-p json}: Prints JSON output")
+
+    mkdir = subparser.add_parser("mkdir",help="Make a Directory on a remote")
+    mkdir.set_defaults(func=mkdirOp)
+    #mkdir.add_argument('type:remote@path')#Old way of parsing similar to normal linux tools
+    mkdir.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
+    mkdir.add_argument("-credentialId",required=True,dest="credId",help="Credential name for remote endpoint")
+    mkdir.add_argument("-path",required=False,dest="path",help="Path to where the new directory will go(default: / )")
+    mkdir.add_argument("-newDir",required=True,dest="newDir",help="New directory to create")
+
+    transfer = subparser.add_parser("transfer",help="Transfer between two remotes")
     transfer.set_defaults(func=transferOp)
-    transfer.add_argument("-hostname",required=False)
-    #transfer.add_argument("-Stype")
-    #transfer.add_argument("-ScredId")
-    #transfer.add_argument("-Sinfo",default="{'id':'','path':'','size':''}")
-    #transfer.add_argument("-SinfoList",default="{'id':'','path':'','size':''}")
-    #transfer.add_argument("-Dtype")
-    #transfer.add_argument("-DcredId")
-    #transfer.add_argument("-Dinfo",default="{'id':'','path':'','size':''}")
-    #transfer.add_argument()
-    transfer.add_argument("-Source",required=True)
-    transfer.add_argument("-Destination",required=True)
+    transfer.add_argument("-Source-type",required=True,help="Source credential type")
+    transfer.add_argument("-Source-credID",help="Source credential name")
+    transfer.add_argument("-Source-File",help="Source file name")
+    transfer.add_argument("-Source-Path",help="Path to source file")
+    transfer.add_argument("-Dest-type",help="Destinaltion credential type")
+    transfer.add_argument("-Dest-credID",help="Destination credential name")
+    transfer.add_argument("-Dest-Path",help="Path to destination directory")
+    transfer.add_argument("-concurrency",default=1,help="Concurreny Level (default: 1 )")
+    transfer.add_argument("-piping",default=1,help="Pipe Size (default: 1 )")
+    transfer.add_argument("-chunkSize",default=640000,help="Chunk Size (default: 640000 )")
 
-
-    jobQuery = subparser.add_parser("jobQuery")
+    jobQuery = subparser.add_parser("jobQuery",help="Query about an ongoing/previous transfer")
     jobQuery.set_defaults(func=jobQueryOp)
     jobQuery.add_argument("-hostname")
     jobQuery.add_argument("-jobName")
@@ -262,7 +235,7 @@ def parseArgFunc():
     jobQuery.add_argument("-stepName")
     jobQuery.add_argument("-isDirectory")
 
-    getOAuthUrl = subparser.add_parser("getOAuthUrl")
+    getOAuthUrl = subparser.add_parser("getOAuthUrl",help="Get a URL to Authorize the use of OAUTH remotes")
     getOAuthUrl.set_defaults(func=getOAuthUrlOp)
     getOAuthUrl.add_argument("-type")
     #DEBUG
@@ -272,13 +245,8 @@ def parseArgFunc():
 if __name__ == '__main__':
     parser = parseArgFunc()
     args = parser.parse_args()
-    #args = parseArgFunc()
-
-    #checking for super user permissions (ONLY FOR INTERACTIVE MODE)
-    if not vars(args):
-        if not os.geteuid() == 0:
-            raise PermissionError('This Client must be run with super user permissions')
-    else:
-        #DEBUG
-        #rint("Called Arg Function")
-        args.func(args)
+    argsD = vars(args)
+    if (argsD=={}):
+        print("\nNo arguments provided, please try -h for help\n")
+        exit()
+    args.func(argsD)
