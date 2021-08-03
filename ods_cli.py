@@ -99,9 +99,31 @@ def addRemoteEnd(args):
     if isOAuth:
         CredS.oauth_Url(host,typeE,token)
     else:
-        #add code to see if its a keyfile or a password based credential using argsD["keyfile"]
+        # First, check to make sure both are not none.
+        if args['keyfile'] == "" and args['passw'] == "":
+            print("Password Error: No password given")
 
-        CredS.register_Credential(host,typeE,args['accountID'],args['host'],args['user'],args['passw'],token)
+        # If the code has gotten here, that means that either the keyfile or the password is valid. 
+        # However, it is also possible that BOTH are valid, which is also an error. 
+
+        elif args['keyfile'] != "" and args['passw'] != "":
+            print("Password Error: Both password types given, please only provide one")
+
+        # Now, we can conclude that only one of the two password types were given.
+
+        else:
+            if args['keyfile'] != "":
+                print("Used the keyfile")
+                keyfile = args['keyfile']
+                if keyfile.endswith('.pem'):
+                    with open(keyfile, "r") as f:
+                        keyfile = f.read()
+                    CredS.register_Credential(host,typeE,args['accountID'],args['host'],args['user'],keyfile,token)
+                else:
+                    print("Password Error: The PEM key you provided was malformed, it must end with a .pem file extension.")
+            else:
+                print("Used the password")
+                CredS.register_Credential(host,typeE,args['accountID'],args['host'],args['user'],args['passw'],token)
 
 
 def deleteRemoteEnd(args):
@@ -188,6 +210,7 @@ def parseArgFunc():
     addRemote.add_argument("-host",default="",dest="host",help="Hostname for remote endpoint")
     addRemote.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
     addRemote.add_argument("-credentialId",dest="accountID",help="Custom name for new remote endpoint credential")     #DEFAULT PATH == /
+    addRemote.add_argument("-keyfile",default="",dest="keyfile",help="A PEM key used as an alternative means of logging in")
     #add new argument for key file "-keyFile or something"
 
     listRemotes = subparser.add_parser("listRemotes",help="List the saved remotes of a certain type")
