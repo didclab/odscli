@@ -113,7 +113,6 @@ def addRemoteEnd(args):
 
         else:
             if args['keyfile'] != "":
-                print("Used the keyfile")
                 keyfile = args['keyfile']
                 if keyfile.endswith('.pem'):
                     with open(keyfile, "r") as f:
@@ -122,7 +121,6 @@ def addRemoteEnd(args):
                 else:
                     print("Password Error: The PEM key you provided was malformed, it must end with a .pem file extension.")
             else:
-                print("Used the password")
                 CredS.register_Credential(host,typeE,args['accountID'],args['host'],args['user'],args['passw'],token)
 
 

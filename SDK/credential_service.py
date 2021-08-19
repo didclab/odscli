@@ -12,29 +12,48 @@ class CredService:
         query= {"type":type}
         headers={"accept":"application/json","Authorization": "Bearer "+atok+""}
         greq = requests.get(req,headers=headers,json=body,params=query,allow_redirects=False)# Needs to be handled better for errors
-        print(greq.headers["Location"])
+        if greq.status_code==200:
+            print(greq.headers["Location"])
+        else:
+            print("Error Handling oauth_Url") 
+            return False,""
 
     def register_Credential(host,type,cred_id,uri,username,secret,atok)->bool:
         req = "http://"+host+":"+constants.PORT+constants.CRED_ACCOUNT_REGISTERV2
         reqFormated = req.format(type=type)
         cookies = dict(ATOKEN=atok)
         body = {'accountId':cred_id,'uri':uri,'username':username,'secret':secret}
-        requests.post(reqFormated, cookies=cookies,json=body)# Needs to be handled better for errors
+
+        # Post requests should be fine, as you gave me the okay on these a while back. 
+        ereq = requests.post(reqFormated, cookies=cookies,json=body)# Needs to be handled better for errors
+        if ereq.status_code == 200:
+            ereq
+        else:
+            return False
 
     def get_CredentialODS(type:EndpointType,atok,hostname):
         req = "http://"+hostname+":"+constants.PORT+constants.CRED_ACCOUNT_REGISTERV2
         reqFormated = req.format(type=type)
         cookies = dict(ATOKEN=atok)
         headers = {"Authorization": "Bearer "+atok+""}
+
+        # Not so sure about get requests though, not familiar enough with the requests library. 
         req = requests.get(reqFormated,headers=headers, cookies=cookies)# Needs to be handled better for errors
-        return req.json()
+        if req.status_code == 200:
+            return req.json()
+        else:
+            return False,""
+
     def delete_CredentialODS(type:EndpointType,credID,atok,hostname):
         req = "http://"+hostname+":"+constants.PORT+constants.CRED_ACCOUNT_DELETE
         reqFormated = req.format(type=type,credID=credID)
         cookies = dict(ATOKEN=atok)
         headers = {"Authorization": "Bearer "+atok+""}
         req = requests.delete(reqFormated,headers=headers, cookies=cookies)# Needs to be handled better for errors
-        return req
+        if req.status_code == 200:
+            return req
+        else:
+            return False,""
 
     def get_CredentialEnd(type,atok,hostname,user):
         req = "http://"+hostname+":"+"8081"+constants.CRED_ACCOUNT_GETV2
@@ -42,7 +61,10 @@ class CredService:
         cookies = dict(ATOKEN=atok)
         headers = {"Authorization": "Bearer "+atok+""}
         req = requests.get(reqFormated,headers=headers, cookies=cookies)# Needs to be handled better for errors
-        return req
+        if req.status_code == 200:
+            return req
+        else:
+            return False,""
 
 
 

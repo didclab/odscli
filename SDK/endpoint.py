@@ -42,7 +42,12 @@ class Endpoint():
         cookies = dict(ATOKEN=atok)
         body={'credId':remoteHost,'path':path,'identifier':identifier}
         req = requests.get(reqForm,params=body,cookies=cookies)# Needs to be handled better for errors
-        return req.text
+        if req.status_code==200:
+            print(req.text())
+            return req.text
+        else:
+            print("Error Handling list")
+            return False,""
 
     def mkdir(remoteHost, path, identifier, host, type, atok,dirToAdd) -> str:
         req = "http://"+host+":"+constants.PORT+constants.MKDIRV2
@@ -50,7 +55,12 @@ class Endpoint():
         cookies = dict(ATOKEN=atok)
         body={'credId':remoteHost,'path':path,'id':identifier,'folderToCreate':dirToAdd}
         reqs = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
-        return reqs.text
+        if reqs.status_code==200:
+            print(reqs.text())
+            return reqs.text
+        else:
+            print("Error Handling mkdir")
+            return False,""
 
     def remove(remoteHost, path, identifier, host, type, atok,filename) -> str:
         req = "http://"+host+":"+constants.PORT+constants.REMOVEV2
@@ -58,4 +68,10 @@ class Endpoint():
         cookies = dict(ATOKEN=atok)
         body={'credId':remoteHost,'path':path,'id':identifier,'toDelete':filename}
         reqs = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
+        if reqs.status_code==200:
+            print(reqs.text())
+            return reqs.text
+        else:
+            print("Error Handling remove")
+            return False,""
         return req

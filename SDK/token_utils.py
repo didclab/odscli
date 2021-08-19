@@ -30,8 +30,13 @@ def readConfig():
 def isValidUser(host:str,email:str)->bool:
     isValidURL = "http://"+host+":"+constants.PORT+constants.VALIDATE_EMAILV2
     body = {'email':email}
-    req = requests.post(isValidURL,json=body)# Needs to be handled better for errors
-    return req.json()
+    req = requests.post(isValidURL,json=body)
+    if req.status_code==200:
+        print(req.json())
+        return req.json()
+    else:
+        print("Error Handling isValidUser")
+        return False,""
 
 
 def login(host,user,password):
