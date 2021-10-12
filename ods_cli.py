@@ -226,7 +226,7 @@ def parseArgFunc():
     list.set_defaults(func=listOp)
     list.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
     list.add_argument("-credentialId",required=True,dest="credId",help="Credential name for remote endpoint")
-    list.add_argument("-path",required=False,dest="path",default="/",help="Path for remote endpoint (default: / )")
+    list.add_argument("-path",required=False,dest="path",default="",help="Path for remote endpoint (default: / )")
     list.add_argument("-p",dest='print',help="(OPTIONAL)Print option, Default: Pretty Print, Optional{-p json}: Prints JSON output")
 
     mkdir = subparser.add_parser("mkdir",help="Make a Directory on a remote")
