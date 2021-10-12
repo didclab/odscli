@@ -209,7 +209,7 @@ def parseArgFunc():
     addRemote.add_argument("-pass",default="",dest="passw",help="Password for remote endpoint")
     addRemote.add_argument("-host",default="",dest="host",help="Hostname for remote endpoint")
     addRemote.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
-    addRemote.add_argument("-credentialId",dest="accountID",help="Custom name for new remote endpoint credential")     #DEFAULT PATH == /
+    addRemote.add_argument("-ci","-credentialId",dest="accountID",help="Custom name for new remote endpoint credential")     #DEFAULT PATH == /
     addRemote.add_argument("-keyfile",default="",dest="keyfile",help="A PEM key used as an alternative means of logging in")
     #add new argument for key file "-keyFile or something"
 
@@ -220,12 +220,12 @@ def parseArgFunc():
     deleteRemote = subparser.add_parser("deleteRemote",help="Delete a saved remote")
     deleteRemote.set_defaults(func=deleteRemoteEnd)
     deleteRemote.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
-    deleteRemote.add_argument("-credentialId",required=True,dest="credID",help="Credential name for remote endpoint")
+    deleteRemote.add_argument("-ci","-credentialId",required=True,dest="credID",help="Credential name for remote endpoint")
 
     list = subparser.add_parser("list",help="List the contents of a remote")
     list.set_defaults(func=listOp)
     list.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
-    list.add_argument("-credentialId",required=True,dest="credId",help="Credential name for remote endpoint")
+    list.add_argument("-ci","-credentialId",required=True,dest="credId",help="Credential name for remote endpoint")
     list.add_argument("-path",required=False,dest="path",default="",help="Path for remote endpoint (default: / )")
     list.add_argument("-p",dest='print',help="(OPTIONAL)Print option, Default: Pretty Print, Optional{-p json}: Prints JSON output")
 
@@ -233,7 +233,7 @@ def parseArgFunc():
     mkdir.set_defaults(func=mkdirOp)
     #mkdir.add_argument('type:remote@path')#Old way of parsing similar to normal linux tools
     mkdir.add_argument("-type",required=True,dest="type",help="Type of remote endpoint")
-    mkdir.add_argument("-credentialId",required=True,dest="credId",help="Credential name for remote endpoint")
+    mkdir.add_argument("-ci","-credentialId",required=True,dest="credId",help="Credential name for remote endpoint")
     mkdir.add_argument("-path",required=False,dest="path",help="Path to where the new directory will go(default: / )")
     mkdir.add_argument("-newDir",required=True,dest="newDir",help="New directory to create")
 
