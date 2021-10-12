@@ -6,9 +6,9 @@ setup(
 
         version ='1.0.0',
 
-        author ='Admin OneDataShare'
+        author ='Admin OneDataShare',
 
-        author_email ='admin@onedatashare.org'
+        author_email ='admin@onedatashare.org',
 
         description ='Demo Package for CLI',
 
