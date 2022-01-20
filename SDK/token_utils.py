@@ -22,13 +22,13 @@ def readConfig():
     try:
         config.read('odsConfig.ini')
     except:
-        print('Config Read Issue')
+        print('Config Read Issue are you logged in?')
         return False
     return config['OneDataShare']['hostname'],config['OneDataShare']['username'],config['OneDataShare']['token']
 
 
 def isValidUser(host:str,email:str)->bool:
-    isValidURL = "http://"+host+":"+constants.PORT+constants.VALIDATE_EMAILV2
+    isValidURL = "http://"+host+constants.VALIDATE_EMAILV2
     body = {'email':email}
     req = requests.post(isValidURL,json=body)# Needs to be handled better for errors
     return req.json()
@@ -36,9 +36,9 @@ def isValidUser(host:str,email:str)->bool:
 
 def login(host,user,password):
     if isValidUser(host,user):
-        loginURL = "http://"+host+":"+constants.PORT+constants.AUTHENTICATEV2
+        loginURL = "https://"+host+constants.AUTHENTICATEV2
         body = {'email':user,'password':password}
-        req = requests.post(loginURL,json=body)
+        req = requests.post(loginURL,json=body, timeout=10)
         atoken = req.cookies.get_dict()# Needs to be handled better for errors
         if req.status_code != 200:
             print("\nError Handling Login\n")

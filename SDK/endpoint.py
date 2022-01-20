@@ -36,26 +36,28 @@ class Endpoint():
             print("Unknown Error")
             raise
 
-    def list(remoteHost,path,identifier,host,type,atok) -> str:
-        req = "http://"+host+":"+constants.PORT+constants.LISTV2
+    def list(credId,host,type,atok, path="", id="") -> str:
+        req = constants.ODS_PROTOCOL+host+constants.LISTV2
         reqForm = req.format(type=type)
         cookies = dict(ATOKEN=atok)
-        body={'credId':remoteHost,'path':path,'identifier':identifier}
-        req = requests.get(reqForm,params=body,cookies=cookies)# Needs to be handled better for errors
-        return req.text
+        body={'credId':credId,'path':path,'identifier':id}
+        print(body)
+        res = requests.get(reqForm,params=body,cookies=cookies)# Needs to be handled better for errors
+        return res.text
 
-    def mkdir(remoteHost, path, identifier, host, type, atok,dirToAdd) -> str:
-        req = "http://"+host+":"+constants.PORT+constants.MKDIRV2
+    def mkdir(credId, host, type, atok, folderToCreate, path="", id="") -> str:
+        req = constants.ODS_PROTOCOL+host+constants.MKDIRV2
         reqForm = req.format(type=type)
         cookies = dict(ATOKEN=atok)
-        body={'credId':remoteHost,'path':path,'id':identifier,'folderToCreate':dirToAdd}
-        reqs = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
-        return reqs.text
+        body={'credId':credId,'path':path,'id':id,'folderToCreate':folderToCreate}
+        res = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
+        return res
 
-    def remove(remoteHost, path, identifier, host, type, atok,filename) -> str:
-        req = "http://"+host+":"+constants.PORT+constants.REMOVEV2
+    def remove(credId, host, type, atok, toDelete, path="", id="") -> str:
+        req = constants.ODS_PROTOCOL+host+constants.REMOVEV2
         reqForm = req.format(type=type)
         cookies = dict(ATOKEN=atok)
-        body={'credId':remoteHost,'path':path,'id':identifier,'toDelete':filename}
-        reqs = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
-        return req
+        body={'credId':credId,'path':path,'id':id,'toDelete':toDelete}
+        print(body)
+        res = requests.post(reqForm,json=body,cookies=cookies)# Needs to be handled better for errors
+        return res
