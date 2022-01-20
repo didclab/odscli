@@ -23,7 +23,6 @@ The following files consist of what could be considered the ODS Python SDK and a
 
 ```
 PLEASE look at onedatashare.py for all documentation. Everything below is invalid!!
-Gettings Started
 ------
 **General help**
 ```
