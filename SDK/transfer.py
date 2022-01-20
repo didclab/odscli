@@ -9,18 +9,31 @@ class Iteminfo():
         self.path = path
         self.size = size
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
+
+
 class Source():
-    def __init__(self,type: str = "", credentialId: str = "",parentInfo:Iteminfo = Iteminfo("","",-1), info: Iteminfo = Iteminfo("","",-1)):
+    def __init__(self,infoList=[], type: str="", credentialId: str = "",parentInfo:Iteminfo = Iteminfo("","",-1)):
         self.type = type
-        self.credentialId = credentialId
-        self.info = info
+        self.credId = credentialId
+        self.infoList = infoList
         self.parentInfo = parentInfo
+    
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
 
 class Destination():
-    def __init__(self,type: str = "", credentialId: str = "", info: Iteminfo = Iteminfo()):
+    def __init__(self,type: str = "", credentialId: str = "", parentInto: Iteminfo = Iteminfo()):
         self.type = type
-        self.credentialId = credentialId
-        self.info = info
+        self.credId = credentialId
+        self.parentInfo = parentInto
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
 
 class TransferOptions():
     def __init__(self,concurrencyThreadCount:int = 1,pipeSize:int = 1, chunkSize:int = 640000, parallelThreadCount:int = 1,compress:bool = False,encrypt:bool = False,optimize:str = "",overwrite:str = "",retry:int = 1,verify:bool = False):
@@ -35,12 +48,20 @@ class TransferOptions():
         self.retry = retry
         self.verify = verify
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
+
 class TransferRequest():
-    def __init__(self,source:Source = Source(),dest:Destination = Destination(),TransfOp:TransferOptions = TransferOptions(),priority:int = 0):
+    def __init__(self,source:Source = Source(),dest:Destination = Destination(),TransfOp:TransferOptions = TransferOptions()):
         self.source = source
-        self.dest = dest
-        self.TransfOp = TransfOp
-        self.priority = priority
+        self.destination = dest
+        self.options = TransfOp
+    
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, 
+            sort_keys=True, indent=4)
+    
 
 class Transfer():
     def transfer(host,token,request:TransferRequest):
@@ -48,14 +69,14 @@ class Transfer():
         #need to add parent ID and parent PATH
         #need to add info ID and info PATH
         #need to add more options (compress encrypt optimizer)**support these first
-        body={"source":{"type":request.source.type,"credId":request.source.credentialId,"parentInfo":{"id":request.source.parentInfo.id,"path":request.source.parentInfo.path,"size":request.source.parentInfo.size},"infoList":[{"id":request.source.info.id,"path":request.source.info.path}]},"destination":{"type":request.dest.type,"credId":request.dest.credentialId,"parentInfo":{"id":request.dest.info.id,"path":request.dest.info.path,"size":request.dest.info.size}},"options":{"concurrencyThreadCount":request.TransfOp.concurrencyThreadCount,"pipeSize":request.TransfOp.pipeSize,"chunkSize":request.TransfOp.chunkSize,"parallelThreadCount":request.TransfOp.parallelThreadCount}}
-        jsOb = json.dumps(body)
-        hoststring = "http://"+host+":"+constants.PORT+constants.TRANSFER
+        # body={"source":{"type":request.source.type,"credId":request.source.credentialId,"parentInfo":{"id":request.source.parentInfo.id,"path":request.source.parentInfo.path,"size":request.source.parentInfo.size},"infoList":[{"id":request.source.info.id,"path":request.source.info.path}]},"destination":{"type":request.destination.type,"credId":request.destination.credentialId,"parentInfo":{"id":request.destination.info.id,"path":request.destination.info.path,"size":request.destination.info.size}},"options":{"concurrencyThreadCount":request.options.concurrencyThreadCount,"pipeSize":request.options.pipeSize,"chunkSize":request.options.chunkSize,"parallelThreadCount":request.options.parallelThreadCount}}
+        # jsOb = json.dumps(body)
+        hoststring = constants.ODS_PROTOCOL+host+constants.TRANSFER
         cookies = dict(ATOKEN=token)
         headers={"Content-Type":"application/json","Authorization": "Bearer "+token+""}
-        r = requests.post(hoststring,headers=headers,cookies=cookies,data=jsOb)# Needs to be handled better for errors
+        print(request.toJSON())
+        r = requests.post(hoststring,headers=headers,cookies=cookies,data=request.toJSON())# Needs to be handled better for errors
         return r
-
 
     def transferStatus(id: str):
         #Todo GetStatus
