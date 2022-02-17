@@ -21,10 +21,12 @@ package-build:
   script: 
     - pwd
     - ls
-    - zip -r /builds/onedatashare/ods-cli.zip /builds/onedatashare/ods-cli/
+    - zip -r ods-cli.zip .
+    - ls
+    - pwd
   artifacts:
     paths:
-      - /builds/onedatashare/ods-cli.zip
+      - ods-cli.zip
 
 aws-service-deploy:
   image: alpine
