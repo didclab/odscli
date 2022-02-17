@@ -41,4 +41,6 @@ aws-service-deploy:
     - chmod 700 ~/.ssh
   script:
     - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "echo 'Hello' "
+    - scp -o StrictHostKeyChecking=no ods-cli.zip ubuntu@34.227.114.101:/home/ubuntu/
+    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "ls /home/ubuntu"
 
