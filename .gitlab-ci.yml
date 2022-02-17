@@ -17,7 +17,7 @@ package-build:
   before_script:
     - apk add --update zip
   only:
-    - master
+    - yj/master-ci
   script: 
     - zip -r ods-cli.zip .
   artifacts:
@@ -28,7 +28,7 @@ aws-service-deploy:
   image: alpine
   stage: deploy
   only:
-    - master
+    - yj/master-ci
   before_script:
     - apk add openssh-client
     - eval $(ssh-agent -s)
