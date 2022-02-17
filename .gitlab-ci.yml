@@ -12,24 +12,23 @@ variables:
 
 ##Build the project
 package-build:
-  image: maven:3-jdk-11
+  image: alpine
   stage: build
   only:
     - yj/master-ci
   script: 
     - pwd
     - ls
+    - zip -r /builds/onedatashare/ods-cli.zip /builds/onedatashare/ods-cli/
   artifacts:
     paths:
-      - target/*.zip
+      - /builds/onedatashare/ods-cli.zip
 
 aws-service-deploy:
-  image: docker:19.03.12
+  image: alpine
   stage: deploy
   only:
     - yj/master-ci
-  services:
-    - docker:19.03.12-dind
   before_script:
     - apk add openssh-client
     - eval $(ssh-agent -s)
