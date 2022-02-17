@@ -17,10 +17,11 @@ package-build:
   only:
     - yj/master-ci
   script: 
-    - mvn clean package -DskipTests
+    - pwd
+    - ls
   artifacts:
     paths:
-      - target/*.jar
+      - target/*.zip
 
 aws-service-deploy:
   image: docker:19.03.12
