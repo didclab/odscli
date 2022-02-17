@@ -36,11 +36,11 @@ aws-service-deploy:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "echo 'Hello' "
-    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "if [ -d "/home/ubuntu/ods-cli.zip" ]; then rm /home/ubuntu/ods-cli.zip ; fi"
-    - scp -o StrictHostKeyChecking=no ods-cli.zip CI_EC2_USER@$NODE_IP:/home/ubuntu/
-    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "if [ -d "/home/ubuntu/Repos/ods-cli/" ]; then rm -rf /home/ubuntu/Repos/ods-cli/ ; fi"
-    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "mkdir /home/ubuntu/Repos/ods-cli"
-    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "ls /home/ubuntu"
-    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "unzip ods-cli.zip -d '/home/ubuntu/Repos/ods-cli/' "
+    - ssh -o StrictHostKeyChecking=no $CI_EC2_USER@$NODE_IP "echo 'Hello' "
+    - ssh -o StrictHostKeyChecking=no $CI_EC2_USER@$NODE_IP "if [ -d "/home/ubuntu/ods-cli.zip" ]; then rm /home/ubuntu/ods-cli.zip ; fi"
+    - scp -o StrictHostKeyChecking=no ods-cli.zip $CI_EC2_USER@$NODE_IP:/home/ubuntu/
+    - ssh -o StrictHostKeyChecking=no $CI_EC2_USER@$NODE_IP "if [ -d "/home/ubuntu/Repos/ods-cli/" ]; then rm -rf /home/ubuntu/Repos/ods-cli/ ; fi"
+    - ssh -o StrictHostKeyChecking=no $CI_EC2_USER@$NODE_IP "mkdir /home/ubuntu/Repos/ods-cli"
+    - ssh -o StrictHostKeyChecking=no $CI_EC2_USER@$NODE_IP "ls /home/ubuntu"
+    - ssh -o StrictHostKeyChecking=no $CI_EC2_USER@$NODE_IP "unzip ods-cli.zip -d '/home/ubuntu/Repos/ods-cli/' "
 
