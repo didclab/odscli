@@ -1,0 +1,69 @@
+image: docker:stable
+
+stages:
+  - package
+  - build
+  - deploy
+
+variables:
+  APP_PORT: 8092
+  DOCKER_DRIVER: overlay
+  APP_NAME: ods-cli
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+
+##Build the project
+maven-build:
+  image: maven:3-jdk-11
+  stage: build
+  only:
+    - master
+  script: "mvn clean package -DskipTests"
+  artifacts:
+    paths:
+      - target/*.jar
+
+#Run Docker build and push it to the Gitlab Registry
+docker-build:
+  image: docker:19.03.12
+  stage: package
+  only:
+    - master
+  services:
+    - docker:19.03.12-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+
+aws-service-deploy:
+  image: docker:19.03.12
+  stage: deploy
+  only:
+    - master
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$CI_CD_PEM" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "echo 'Hello' "
+
+
+aws-docker-deploy:
+  image: docker:19.03.12
+  stage: deploy
+  only:
+    - master
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$CI_CD_PEM" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "echo 'Hello' "
