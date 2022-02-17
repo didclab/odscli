@@ -17,13 +17,9 @@ package-build:
   before_script:
     - apk add --update zip
   only:
-    - yj/master-ci
+    - master
   script: 
-    - pwd
-    - ls
     - zip -r ods-cli.zip .
-    - ls
-    - pwd
   artifacts:
     paths:
       - ods-cli.zip
@@ -32,7 +28,7 @@ aws-service-deploy:
   image: alpine
   stage: deploy
   only:
-    - yj/master-ci
+    - master
   before_script:
     - apk add openssh-client
     - eval $(ssh-agent -s)
@@ -40,11 +36,11 @@ aws-service-deploy:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "echo 'Hello' "
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "if [ -d "/home/ubuntu/ods-cli.zip" ]; then rm /home/ubuntu/ods-cli.zip ; fi"
-    - scp -o StrictHostKeyChecking=no ods-cli.zip ubuntu@34.227.114.101:/home/ubuntu/
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "if [ -d "/home/ubuntu/Repos/ods-cli/" ]; then rm -rf /home/ubuntu/Repos/ods-cli/ ; fi"
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "mkdir /home/ubuntu/Repos/ods-cli"
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "ls /home/ubuntu"
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "unzip ods-cli.zip -d '/home/ubuntu/Repos/ods-cli/' "
+    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "echo 'Hello' "
+    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "if [ -d "/home/ubuntu/ods-cli.zip" ]; then rm /home/ubuntu/ods-cli.zip ; fi"
+    - scp -o StrictHostKeyChecking=no ods-cli.zip CI_EC2_USER@$NODE_IP:/home/ubuntu/
+    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "if [ -d "/home/ubuntu/Repos/ods-cli/" ]; then rm -rf /home/ubuntu/Repos/ods-cli/ ; fi"
+    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "mkdir /home/ubuntu/Repos/ods-cli"
+    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "ls /home/ubuntu"
+    - ssh -o StrictHostKeyChecking=no CI_EC2_USER@$NODE_IP "unzip ods-cli.zip -d '/home/ubuntu/Repos/ods-cli/' "
 
