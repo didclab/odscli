@@ -14,6 +14,8 @@ variables:
 package-build:
   image: alpine
   stage: build
+  before_script:
+    - apk add --update zip
   only:
     - yj/master-ci
   script: 
