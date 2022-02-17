@@ -43,7 +43,7 @@ aws-service-deploy:
     - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "echo 'Hello' "
     - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "if [ -d "/home/ubuntu/ods-cli.zip" ]; then rm /home/ubuntu/ods-cli.zip ; fi"
     - scp -o StrictHostKeyChecking=no ods-cli.zip ubuntu@34.227.114.101:/home/ubuntu/
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "if [ -d "/home/ubuntu/Repos/ods-cli/" ]; then rm -Rf /home/ubuntu/Repos/ods-cli/ ; fi"
+    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "if [ -d "/home/ubuntu/Repos/ods-cli/" ]; then rm -r /home/ubuntu/Repos/ods-cli/* ; fi"
     - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "ls /home/ubuntu"
-    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "unzip ods-cli.zip -d '/home/ubuntu/Repos/' "
+    - ssh -o StrictHostKeyChecking=no ubuntu@34.227.114.101 "unzip ods-cli.zip -d '/home/ubuntu/Repos/ods-cli/' "
 
