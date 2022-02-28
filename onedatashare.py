@@ -13,7 +13,7 @@ Usage:
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify]
+  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test=<times>]
   onedatashare.py query <jobId>
   onedatashare.py --version
 
@@ -24,7 +24,7 @@ Commands:
     ls              List operation on a server that has been added to onedatashare. This requires a credential Id and a type, the path is optional.
     rm              Remove operation on an added server. Requires a credential Id, type, and a path(either folder or file). If a directory is passed then it will recursively delete the directory
     mkdir           Creates a directory on an added server. This requires credential Id, type, and a path to create
-    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize.
+    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize, test.
     query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
 
 Options:
@@ -45,6 +45,7 @@ Options:
   --overwrite       A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
   --retry           An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
   --verify          A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
+  --test=<times>            An integer that represents the number of tests that you wish to transfer this file to destination
 """
 
 from docopt import docopt
@@ -64,6 +65,7 @@ from SDK.transfer import Source
 from SDK.transfer import Destination
 from SDK.transfer import Iteminfo
 from SDK.transfer import Transfer as Transfer
+
 
 def login(host, user, password):
   work, tok = tokUt.login(host=args['-H'], user=args['<user>'], password=args['<password>'])
@@ -169,9 +171,9 @@ def mkdir(type, credId, dirToMake, path=""):
         print("Directory created "+dirToMake)
     print(res)
 
-#Not yet done
-#<source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify,
-def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="",dest_path="", concurrency=1, pipesize=10, parallel=0, chunksize=64000, compress=False, encrypt=False, optimize="", overwrite=False, retry=5, verify=False):
+
+#<source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test
+def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="",dest_path="", concurrency=1, pipesize=10, parallel=0, chunksize=64000, compress=False, encrypt=False, optimize="", overwrite=False, retry=5, verify=False, test=1):
     host, user, token = tokUt.readConfig()
     infoList=[]
     for f in file_list:
@@ -183,7 +185,7 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
 
     r = Transfer.transfer(host,token,transferRequest)
-    
+
     print("status code: "+str(r.status_code))
     print(r.text)
       
@@ -213,6 +215,10 @@ if __name__ == '__main__':
     elif args['mkdir']:
           mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
+        test_time = 1
+        if args['--test'] != None:
+          test_time = int(args['--test'])
+        for i in range(0, test_time):
           transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'], source_path= args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'], dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'])
     elif args['query']:
           print('not yet implemented')
