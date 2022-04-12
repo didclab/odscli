@@ -81,7 +81,7 @@ if __name__ == '__main__':
     args = docopt(__doc__, version='Naval Fate 2.0')
     print(args)
     if args['lsRemote']:
-        lsRemote()
+        print(lsRemote())
     elif args['transfer']:
         times = int(args["--repeat"])
         transfer(dict["transfer"], args["<source_credid>"], args["<source_path>"],args["<file>"], args["<dest_credid>"],args["<dest_path>"], process=args["--process"])
