@@ -16,6 +16,11 @@ Usage:
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test=<times>]
   onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--repeat=<times>]
   onedatashare.py query <jobId>
+  onedatashare.py rc_transfer <source_credid> <source_path> <file> <dest_credid> <dest_path> [--process --repeat=<times>]
+  onedatashare.py rc_transferAll <source_credid> <source_path> <file> <dest_path> [--process --repeat=<times>]
+  onedatashare.py rc_delete <source_credid> <path> <file>
+  onedatashare.py rc_deleteAll <path> <file>
+  onedatashare.py rc_lsRemote
   onedatashare.py --version
 
 Commands:
@@ -28,27 +33,33 @@ Commands:
     transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize, test
     query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     testAll         Submit a transfer job with test purpose to all existing credential id
+    rc_transfer     Use rClone to submit a transfer from one remote to another remote
+    rc_transferAll  Use rClone to submit a transfer from one remote to all other remote
+    rc_delete       Use rClone to delete specifc file that existing in the remote
+    rc_deleteAll    Use rClone to delete specifc file that existing in every remote
+    rc_lsRemote     List the existing remotes in the rclone
 
 Options:
-  -h --help         Show this screen.
-  -v, --version     Show version.
-  -H HOST           The host of the onedatashare deployment [default: onedatashare.org]
-  --credId          A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
-  type              A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, gftp(pending), http, vfs, scp
-  --jsonprint       A boolean flag to print out the response in json [default: ""]
-  --path=<path>     A string that is the parent of all the resources we are covering in the operation. Many times this can be empty [default: ]
-  --concurrency     The number of concurrent connections you wish to use on your transfer [default: 1]
-  --pipesize        The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
-  --parallel        The number of parallel threads to use for every concurrent connection
-  --chunksize       The number of bytes for every read operation default is 64KB [default: 64000]
-  --compress        A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
-  --encrypt         A boolean flag to enable encryption. Currently not supported [default: False]
-  --optimize        A string flag that allows the user to select which form of optimization to use. [default: False]
-  --overwrite       A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
-  --retry           An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
-  --verify          A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
-  --test=<times>    An integer that represents the number of tests that you wish to transfer this file to destination
-  --repet=<times>   An integer to represents the number of testAll will run
+  -h --help                 Show this screen.
+  -v, --version             Show version.
+  -H HOST                   The host of the onedatashare deployment [default: onedatashare.org]
+  --credId                  A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
+  type                      A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, gftp(pending), http, vfs, scp
+  --jsonprint               A boolean flag to print out the response in json [default: ""]
+  --path=<path>             A string that is the parent of all the resources we are covering in the operation. Many times this can be empty [default: ]
+  --concurrency             The number of concurrent connections you wish to use on your transfer [default: 1]
+  --pipesize                The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
+  --parallel                The number of parallel threads to use for every concurrent connection
+  --chunksize               The number of bytes for every read operation default is 64KB [default: 64000]
+  --compress                A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
+  --encrypt                 A boolean flag to enable encryption. Currently not supported [default: False]
+  --optimize                A string flag that allows the user to select which form of optimization to use. [default: False]
+  --overwrite               A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
+  --retry                   An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
+  --verify                  A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
+  --test=<test_times>       An integer that represents the number of tests that you wish to transfer this file to destination. [default: 1]
+  --repeat=<repeat_times>   An integer to represents the number of testAll will run. [default: 1]
+  --process                 Shows up live process for transfer (rc_command only) [default: False]
 """
 
 from asyncore import file_dispatcher
@@ -58,6 +69,7 @@ import json
 import pprint
 import requests
 from datetime import datetime
+import subprocess
 #SDK IMPORTS
 import SDK.token_utils as tokUt
 from SDK.credential_service import CredService as CredS
@@ -194,10 +206,74 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
 
     print("status code: "+str(r.status_code))
     print(r.text)
+
+###################################### rClone command method
+def lsRcRemotes():
+    with subprocess.Popen(["rclone","listremotes"], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+            (out, err) = process.communicate()
+    list = out.decode("utf-8").split("\n")
+    return list[:-1]
+
+
+def rcTransfer(command, source_credid, source_path, file, dest_credid, dest_path, process=False, repeat=1):
+    if(source_credid[-1] != ':'):
+        source_credid = source_credid+":"
+    if(dest_credid[-1] != ':'):
+        dest_credid = dest_credid+":"
+    arg1 = source_credid+source_path+"/"+file
+    arg2 = dest_credid+dest_path
+    if process: process = "-P"
+    else: process = ""
+    print(dest_credid + " -------------------------------------------------------------------------------------------")
+    cml = "rclone" + " " + command + " " + arg1 + " " + arg2 + " " + str(process) + " --log-file=log.json --log-level=INFO --use-json-log"
+    os.system(cml)
+    print(" ")
+    return
+
+
+def checkFile(dest_credid, path, file):
+    if(dest_credid[-1] != ':'):
+        dest_credid = dest_credid+":"
+    arg1 = dest_credid + path
+    print(arg1 + ", " + file)
+    with subprocess.Popen(["rclone", "lsf",arg1], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+            (out, err) = process.communicate()
+    file_list = out.decode("utf-8").split("\n")
+    print(file_list)
+    for info in file_list:
+        if info == file:
+            return True
+    return False
+
+
+def deleteFile(command, dest_credid, path, file):
+    if(dest_credid[-1] != ':'):
+        dest_credid = dest_credid+":"
+    target = path + "/" + file
+    cml = "rclone" + " " + command + " " + dest_credid + target
+    print(cml)
+    os.system(cml)
+
       
-      
+def parsingAndWirteLog(type1, type2, input, output):
+    # print("hahah")
+    with open(input, "r+") as f:
+        for line in f:
+            data = json.loads(line)
+            # print(data)
+            if 'stats' not in data: continue
+            # print("I am here")
+            stats = data['stats']
+            elapsed_time = stats['elapsedTime']
+            size = stats['bytes']
+            outputFile = open(output, "a+")
+            outputFile.write(type1 + " -> " + type2 + ", " + str(size) + ", " + str(elapsed_time))
+            outputFile.write("\n")
+            outputFile.close()
+        f.truncate(0)
+    return
+
     
-#( <source_credid> <source_path> (-f FILE)... <dest_type> <dest_credid> <dest_path>)
 if __name__ == '__main__':
     args = docopt(__doc__, version='OneDataShare 0.9.1')
     print(args)
@@ -225,7 +301,7 @@ if __name__ == '__main__':
         if args['--test'] != None:
           test_time = int(args['--test'])
         for i in range(0, test_time):
-          transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'], source_path= args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'], dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'])
+          transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'], source_path= args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'], dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>']) 
     elif args['query']:
           print('not yet implemented')
     elif args['testAll']:
@@ -244,5 +320,37 @@ if __name__ == '__main__':
                             path = sourceDes_path[endpoint_type]
                         transfer(source_type=s_type, source_credid=s_credId, source_path= s_path, file_list=file, dest_type=endpoint_type, dest_credid=id, dest_path=path)
                         path = temp
-
+    elif args['rc_transfer']:
+        times = int(args["--repeat"])
+        process = args["--process"]
+        for i in range (0, times):
+            if checkFile(args["<dest_credid>"], args["<dest_path>"], args["<file>"]): 
+                print("delete file successful")
+                deleteFile("deletefile", args["<dest_credid>"], args["<dest_path>"], args["<file>"])
+            rcTransfer("copy", args["<source_credid>"], args["<source_path>"],args["<file>"], args["<dest_credid>"],args["<dest_path>"], process=process)
+        parsingAndWirteLog(args["<source_credid>"],args["<dest_credid>"],"log.json","benchmarking.txt")
+    elif args['rc_transferAll']:
+        times = int(args["--repeat"])
+        process = args["--process"]
+        remotes = lsRcRemotes()
+        source, source_path, file_name, dest_path = args["<source_credid>"], args["<source_path>"], args["<file>"], args["<dest_path>"]
+        for i in remotes:
+            if i !=source+":":
+                for j in range(0, times):
+                    if checkFile(i, dest_path, file_name): 
+                        print("delete file successful")
+                        deleteFile("deletefile", i, dest_path, file_name)
+                    rcTransfer("copy", source, source_path, file_name, i, dest_path, process=process)
+                parsingAndWirteLog(source,i,"log.json","benchmarking.txt")
+    elif args['rc_delete']:
+        source, path, file_name = args['<source_credid>'], args['<path>'], args['<file>']
+        deleteFile("deletefile",source, path, file_name)
+    elif args['rc_deleteAll']:
+        remotes = lsRcRemotes()
+        path, file_name = args['<path>'], args['<file>']
+        for i in remotes:
+            deleteFile("deletefile", i, path, file_name)
+    elif args['rc_lsRemote']:
+        # parsingAndWirteLog("a","b","log.json","benchmarking.txt")
+        print(lsRcRemotes())
 
