@@ -235,11 +235,9 @@ def checkFile(dest_credid, path, file):
     if(dest_credid[-1] != ':'):
         dest_credid = dest_credid+":"
     arg1 = dest_credid + path
-    print(arg1 + ", " + file)
     with subprocess.Popen(["rclone", "lsf",arg1], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
             (out, err) = process.communicate()
     file_list = out.decode("utf-8").split("\n")
-    print(file_list)
     for info in file_list:
         if info == file:
             return True
@@ -251,18 +249,14 @@ def deleteFile(command, dest_credid, path, file):
         dest_credid = dest_credid+":"
     target = path + "/" + file
     cml = "rclone" + " " + command + " " + dest_credid + target
-    print(cml)
     os.system(cml)
 
       
 def parsingAndWirteLog(type1, type2, input, output):
-    # print("hahah")
     with open(input, "r+") as f:
         for line in f:
             data = json.loads(line)
-            # print(data)
             if 'stats' not in data: continue
-            # print("I am here")
             stats = data['stats']
             elapsed_time = stats['elapsedTime']
             size = stats['bytes']
@@ -351,6 +345,5 @@ if __name__ == '__main__':
         for i in remotes:
             deleteFile("deletefile", i, path, file_name)
     elif args['rc_lsRemote']:
-        # parsingAndWirteLog("a","b","log.json","benchmarking.txt")
         print(lsRcRemotes())
 
