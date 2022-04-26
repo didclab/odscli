@@ -16,12 +16,11 @@ Usage:
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test=<times>]
   onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--repeat=<times>]
   onedatashare.py query <jobId>
-  onedatashare.py rc_transfer <source_credid> <source_path> <file> <dest_credid> <dest_path> [--process --repeat=<times>]
-  onedatashare.py rc_transferAll <source_credid> <source_path> <file> <dest_path> [--process --repeat=<times>]
-  onedatashare.py rc_delete <source_credid> <path> <file>
-  onedatashare.py rc_deleteAll <path> <file>
+  onedatashare.py rc_transfer <source_credid> <source_path> <file> <dest_credid> <dest_path> [--process --repeat=<times> --all]
+  onedatashare.py rc_delete <source_credid> <path> <file> [--all]
   onedatashare.py rc_lsRemote
   onedatashare.py --version
+  onedatashare.py help <command>
 
 Commands:
     addRemote       Adds a remote server to onedatashare. Currently the CLI does not support any OAuth endpoints. Please use onedatashare.org to add the OAuth services
@@ -34,10 +33,9 @@ Commands:
     query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     testAll         Submit a transfer job with test purpose to all existing credential id
     rc_transfer     Use rClone to submit a transfer from one remote to another remote
-    rc_transferAll  Use rClone to submit a transfer from one remote to all other remote
     rc_delete       Use rClone to delete specifc file that existing in the remote
-    rc_deleteAll    Use rClone to delete specifc file that existing in every remote
     rc_lsRemote     List the existing remotes in the rclone
+    help            Give the document about specific command include: example, usage, description
 
 Options:
   -h --help                 Show this screen.
@@ -60,6 +58,11 @@ Options:
   --test=<test_times>       An integer that represents the number of tests that you wish to transfer this file to destination. [default: 1]
   --repeat=<repeat_times>   An integer to represents the number of testAll will run. [default: 1]
   --process                 Shows up live process for transfer (rc_command only) [default: False]
+  --all                     Make transfer from one to one to be one to all (existing remote) [default: False]
+  command                   shows commands [default: ]
+
+Example:
+  onedatashare.py help [command]        For more information about command
 """
 
 from asyncore import file_dispatcher
@@ -267,10 +270,19 @@ def parsingAndWirteLog(type1, type2, input, output):
         f.truncate(0)
     return
 
+# def transfer_handler():
+#     """onedatashare.py rc_transfer <source_credid> <source_path> <file> <dest_credid> <dest_path> [--process --repeat=<times> --all]
+
+#     make a transfer from source_credid path to destned
+#     """
+#     print("Foo, {}".format(args['<name>']))
+
     
 if __name__ == '__main__':
     args = docopt(__doc__, version='OneDataShare 0.9.1')
     print(args)
+    if args['help']:
+        print("this is " + str(args['[command]']))
     if args['login']:
         login(host=args["-H"], user=args["<user>"], password=args['<password>'])
     elif args['logout']:
@@ -303,7 +315,7 @@ if __name__ == '__main__':
           t = 1
           if (args['--repeat'] != None): t = int(args['--repeat'])
           s_type, s_credId, s_path, file, path= args['<source_type>'],  args['<source_credid>'], args['<source_path>'], args['FILES'], args['<dest_path>']
-          sourceDes_path = {"box": "156757741686", "s3": " ", "dropbox": "/"+path+"/"+file}
+          sourceDes_path = {"box": "156757741686", "s3": "", "dropbox": "/"+str(path)+"/"+ file[0]}
           for time in range(0, t):
             for endpoint_type in endpoint_types:
                 cred_list = listRemote(endpoint_type)
@@ -316,34 +328,39 @@ if __name__ == '__main__':
                         path = temp
     elif args['rc_transfer']:
         times = int(args["--repeat"])
-        process = args["--process"]
-        for i in range (0, times):
-            if checkFile(args["<dest_credid>"], args["<dest_path>"], args["<file>"]): 
-                print("delete file successful")
-                deleteFile("deletefile", args["<dest_credid>"], args["<dest_path>"], args["<file>"])
-            rcTransfer("copy", args["<source_credid>"], args["<source_path>"],args["<file>"], args["<dest_credid>"],args["<dest_path>"], process=process)
-        parsingAndWirteLog(args["<source_credid>"],args["<dest_credid>"],"log.json","benchmarking.txt")
-    elif args['rc_transferAll']:
-        times = int(args["--repeat"])
-        process = args["--process"]
+        p = args["--process"]
+        transfer_all = args["--all"]
+        source_credid, source_path, file_name, dest_path, dest_credid = args["<source_credid>"], args["<source_path>"], args["<file>"], args["<dest_path>"], args["<dest_credid>"]
         remotes = lsRcRemotes()
-        source, source_path, file_name, dest_path = args["<source_credid>"], args["<source_path>"], args["<file>"], args["<dest_path>"]
-        for i in remotes:
-            if i !=source+":":
-                for j in range(0, times):
-                    if checkFile(i, dest_path, file_name): 
-                        print("delete file successful")
-                        deleteFile("deletefile", i, dest_path, file_name)
-                    rcTransfer("copy", source, source_path, file_name, i, dest_path, process=process)
-                parsingAndWirteLog(source,i,"log.json","benchmarking.txt")
+        if transfer_all:
+            for remote in remotes:
+                if remote != source_credid+":":
+                    for i in range (0, times):
+                        if checkFile(remote, dest_path, file_name): 
+                            print("delete file successful")
+                            deleteFile("deletefile", remote, dest_path, file_name)
+                        rcTransfer("copy", source_credid, source_path, file_name, remote, dest_path, remote, p)
+                parsingAndWirteLog(source_credid, remote,"log.json","benchmarking.txt")
+        else:
+            for i in range (0, times):
+                if checkFile(dest_credid, dest_path, file_name): 
+                    print("delete file successful")
+                    deleteFile("deletefile", dest_credid, dest_path, file_name)
+                rcTransfer("copy", source_credid, source_path, file_name, dest_credid, dest_path, dest_credid, p)
+            parsingAndWirteLog(source_credid, dest_credid,"log.json","benchmarking.txt")
     elif args['rc_delete']:
-        source, path, file_name = args['<source_credid>'], args['<path>'], args['<file>']
-        deleteFile("deletefile",source, path, file_name)
-    elif args['rc_deleteAll']:
+        delete_all = args["--all"]
         remotes = lsRcRemotes()
-        path, file_name = args['<path>'], args['<file>']
-        for i in remotes:
-            deleteFile("deletefile", i, path, file_name)
+        source, path, file_name = args['<source_credid>'], args['<path>'], args['<file>']
+        if delete_all:
+            for remote in remotes:
+                deleteFile("deletefile", remote, path, file_name)
+        else:   
+            deleteFile("deletefile",source, path, file_name)
     elif args['rc_lsRemote']:
         print(lsRcRemotes())
 
+
+#        onedatashare.py addRemote (<user> (--pass=<pass> | --keyfile=<keyfile>)                         <host>       <type>) [--credentialId=<credId>]
+#python3 onedatashare.py addRemote   cc     --keyfile=/Users/mengyuan/Downloads/JacobNUChameleon.pem 165.124.33.183:22 sftp   --credentialId=ccNuBench 
+#python3 onedatashare.py addRemote   cc     --keyfile=/Users/mengyuan/Downloads/JacobNUChameleon.pem    ccNuBench      sftp   --credentialId=ccNuBench 
