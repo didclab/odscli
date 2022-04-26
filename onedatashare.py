@@ -270,12 +270,6 @@ def parsingAndWirteLog(type1, type2, input, output):
         f.truncate(0)
     return
 
-# def transfer_handler():
-#     """onedatashare.py rc_transfer <source_credid> <source_path> <file> <dest_credid> <dest_path> [--process --repeat=<times> --all]
-
-#     make a transfer from source_credid path to destned
-#     """
-#     print("Foo, {}".format(args['<name>']))
 
     
 if __name__ == '__main__':
@@ -359,8 +353,3 @@ if __name__ == '__main__':
             deleteFile("deletefile",source, path, file_name)
     elif args['rc_lsRemote']:
         print(lsRcRemotes())
-
-
-#        onedatashare.py addRemote (<user> (--pass=<pass> | --keyfile=<keyfile>)                         <host>       <type>) [--credentialId=<credId>]
-#python3 onedatashare.py addRemote   cc     --keyfile=/Users/mengyuan/Downloads/JacobNUChameleon.pem 165.124.33.183:22 sftp   --credentialId=ccNuBench 
-#python3 onedatashare.py addRemote   cc     --keyfile=/Users/mengyuan/Downloads/JacobNUChameleon.pem    ccNuBench      sftp   --credentialId=ccNuBench 
