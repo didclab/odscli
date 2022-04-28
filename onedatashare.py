@@ -13,8 +13,8 @@ Usage:
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test=<times>]
-  onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--repeat=<times>]
+  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --repeat=<times>]
+  onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --repeat=<times>]
   onedatashare.py query <jobId>
   onedatashare.py rc_transfer <source_credid> <source_path> <file> <dest_credid> <dest_path> [--process --repeat=<times> --all]
   onedatashare.py rc_delete <source_credid> <path> <file> [--all]
@@ -55,8 +55,7 @@ Options:
   --overwrite               A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
   --retry                   An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
   --verify                  A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
-  --test=<test_times>       An integer that represents the number of tests that you wish to transfer this file to destination. [default: 1]
-  --repeat=<repeat_times>   An integer to represents the number of testAll will run. [default: 1]
+  --repeat=<repeat_times>   An integer to represents the number of repeat time will run. [default: 1]
   --process                 Shows up live process for transfer (rc_command only) [default: False]
   --all                     Make transfer from one to one to be one to all (existing remote) [default: False]
   command                   shows commands [default: ]
@@ -73,6 +72,7 @@ import pprint
 import requests
 from datetime import datetime
 import subprocess
+import odsDocument as document
 #SDK IMPORTS
 import SDK.token_utils as tokUt
 from SDK.credential_service import CredService as CredS
@@ -229,6 +229,7 @@ def rcTransfer(command, source_credid, source_path, file, dest_credid, dest_path
     else: process = ""
     print(dest_credid + " -------------------------------------------------------------------------------------------")
     cml = "rclone" + " " + command + " " + arg1 + " " + arg2 + " " + str(process) + " --log-file=log.json --log-level=INFO --use-json-log"
+    print(cml)
     os.system(cml)
     print(" ")
     return
@@ -264,19 +265,27 @@ def parsingAndWirteLog(type1, type2, input, output):
             elapsed_time = stats['elapsedTime']
             size = stats['bytes']
             outputFile = open(output, "a+")
-            outputFile.write(type1 + " -> " + type2 + ", " + str(size) + ", " + str(elapsed_time))
+            outputFile.write(type1 + " -> " + type2 + ", " + str(size*8) + ", " + str(elapsed_time) + ", " + str(size/elapsed_time))
             outputFile.write("\n")
             outputFile.close()
         f.truncate(0)
     return
 
-
+doc_dict = {
+        "addRemote": document.addRemote(), "lsRemote": document.lsRemote() , "ls": document.ls(), "rm": document.rm(),
+        "mkdir": document.mkdir(), "transfer": document.transfer(), "query": document.query(), "testAll": document.testAll(),
+        "rc_transfer": document.rc_transfer(), "rc_delete": document.rc_delete(), "rc_lsRemote": document.rc_lsRemote(),
+        "other":document.other()
+        }
     
 if __name__ == '__main__':
     args = docopt(__doc__, version='OneDataShare 0.9.1')
     print(args)
     if args['help']:
-        print("this is " + str(args['[command]']))
+        if args['<command>'] in doc_dict:
+            print(doc_dict[args['<command>']])
+        else:
+            print(doc_dict["other"])
     if args['login']:
         login(host=args["-H"], user=args["<user>"], password=args['<password>'])
     elif args['logout']:
@@ -298,10 +307,10 @@ if __name__ == '__main__':
           mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
         test_time = 1
-        if args['--test'] != None:
-          test_time = int(args['--test'])
+        if args['--repeat'] != None:
+          test_time = int(args['--repeat'])
         for i in range(0, test_time):
-          transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'], source_path= args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'], dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>']) 
+          transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'], source_path= args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'], dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'])
     elif args['query']:
           print('not yet implemented')
     elif args['testAll']:
@@ -353,3 +362,7 @@ if __name__ == '__main__':
             deleteFile("deletefile",source, path, file_name)
     elif args['rc_lsRemote']:
         print(lsRcRemotes())
+
+
+
+# python3 onedatashare.py rc_transfer vfsTransferServiceEc2 /home/ubuntu/yuanFolder vid1.mp4 vfsTransferNode /home/ubuntu/yuanFolder --process --repeat 5
