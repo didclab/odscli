@@ -12,7 +12,7 @@ def addRemote():
         onedatashare.py addRemote (<user> (--pass=<pass> | --keyfile=<keyfile>) <host> <type>)
 
         Example on SFTP:
-            onedatashare.py addRemote username --keyfile /.../../abc.pem hostname sftp
+            onedatashare.py addRemote username --keyfile /.../../abc.pem stfp://?.?.?:22 sftp
     
     **Flags**:
         --credentialId    make your own name on this remote, format: [--credentialId customname]
@@ -143,7 +143,8 @@ def transfer():
         --compress              A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
         --encrypt               A boolean flag to enable encryption. Currently not supported [default: False]
         --optimize              A string flag that allows the user to select which form of optimization to use. [default: False]
-        --overwrite             A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
+        --overwrite             A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this
+                                [default: False]
         --retry                 An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
         --verify                A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
         --repeat                An integer to represents the number of repeat time will run for transfer. [default: 1]

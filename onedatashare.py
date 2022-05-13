@@ -225,11 +225,10 @@ def rcTransfer(command, source_credid, source_path, file, dest_credid, dest_path
         dest_credid = dest_credid+":"
     arg1 = source_credid+source_path+"/"+file
     arg2 = dest_credid+dest_path
-    if process: process = "-P"
-    else: process = ""
+    p = ""
+    if process == True: p = "-P"
     print(dest_credid + " -------------------------------------------------------------------------------------------")
-    cml = "rclone" + " " + command + " " + arg1 + " " + arg2 + " " + str(process) + " --log-file=log.json --log-level=INFO --use-json-log"
-    print(cml)
+    cml = "rclone" + " " + command + " " + arg1 + " " + arg2 + " " + p + " --log-file=log.json --log-level=INFO --use-json-log"
     os.system(cml)
     print(" ")
     return
@@ -342,14 +341,14 @@ if __name__ == '__main__':
                         if checkFile(remote, dest_path, file_name): 
                             print("delete file successful")
                             deleteFile("deletefile", remote, dest_path, file_name)
-                        rcTransfer("copy", source_credid, source_path, file_name, remote, dest_path, remote, p)
+                        rcTransfer("copy", source_credid, source_path, file_name, remote, dest_path, p)
                 parsingAndWirteLog(source_credid, remote,"log.json","benchmarking.txt")
         else:
             for i in range (0, times):
                 if checkFile(dest_credid, dest_path, file_name): 
                     print("delete file successful")
                     deleteFile("deletefile", dest_credid, dest_path, file_name)
-                rcTransfer("copy", source_credid, source_path, file_name, dest_credid, dest_path, dest_credid, p)
+                rcTransfer("copy", source_credid, source_path, file_name, dest_credid, dest_path, p)
             parsingAndWirteLog(source_credid, dest_credid,"log.json","benchmarking.txt")
     elif args['rc_delete']:
         delete_all = args["--all"]
@@ -364,5 +363,4 @@ if __name__ == '__main__':
         print(lsRcRemotes())
 
 
-
-# python3 onedatashare.py rc_transfer vfsTransferServiceEc2 /home/ubuntu/yuanFolder vid1.mp4 vfsTransferNode /home/ubuntu/yuanFolder --process --repeat 5
+# python3 onedatashare.py transfer vfs mengyuan19971112@gmail.com-ec2-vfs '/home/ubuntu/yuanFolder' -f 2.txt sftp vfsTransferNode /home/ubuntu/yuanFolder
