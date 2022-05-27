@@ -13,8 +13,8 @@ Usage:
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --repeat=<times>]
-  onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --repeat=<times>]
+  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<cc>, --pipesize=<p>, --parallel=<para>, --chunksize=<chunk>, --compress=<com>, --encrypt<encry>, --optimize=<opt>, --overwrite=<overwirte>, --retry=<retry>, --verify=<verify>, --repeat=<times>]
+  onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--concurrency=<cc>, --pipesize=<p>, --parallel=<para>, --chunksize=<chunk>, --compress=<com>, --encrypt<encry>, --optimize=<opt>, --overwrite=<overwirte>, --retry=<retry>, --verify=<verify>, --repeat=<times>]
   onedatashare.py query <jobId>
   onedatashare.py rc_transfer <source_credid> <source_path> <file> <dest_credid> <dest_path> [--process --repeat=<times> --all]
   onedatashare.py rc_delete <source_credid> <path> <file> [--all]
@@ -45,16 +45,16 @@ Options:
   type                      A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, gftp(pending), http, vfs, scp
   --jsonprint               A boolean flag to print out the response in json [default: ""]
   --path=<path>             A string that is the parent of all the resources we are covering in the operation. Many times this can be empty [default: ]
-  --concurrency             The number of concurrent connections you wish to use on your transfer [default: 1]
-  --pipesize                The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
-  --parallel                The number of parallel threads to use for every concurrent connection
-  --chunksize               The number of bytes for every read operation default is 64KB [default: 64000]
-  --compress                A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
-  --encrypt                 A boolean flag to enable encryption. Currently not supported [default: False]
-  --optimize                A string flag that allows the user to select which form of optimization to use. [default: False]
-  --overwrite               A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
-  --retry                   An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
-  --verify                  A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
+  --concurrency=<cc>        The number of concurrent connections you wish to use on your transfer [default: 1]
+  --pipesize=<pipesize>     The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
+  --parallel=<para>         The number of parallel threads to use for every concurrent connection [default: 0]
+  --chunksize=<chunksize>   The number of bytes for every read operation default is 64KB [default: 64000]
+  --compress=<compress>     A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
+  --encrypt=<encrypt>       A boolean flag to enable encryption. Currently not supported [default: False]
+  --optimize=<opt>          A string flag that allows the user to select which form of optimization to use. [default: False]
+  --overwrite=<overwrite>   A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
+  --retry=<retry>           An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
+  --verify=<verify>         A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
   --repeat=<repeat_times>   An integer to represents the number of repeat time will run. [default: 1]
   --process                 Shows up live process for transfer (rc_command only) [default: False]
   --all                     Make transfer from one to one to be one to all (existing remote) [default: False]
@@ -86,6 +86,7 @@ from SDK.transfer import Iteminfo
 from SDK.transfer import Transfer as Transfer
 
 
+  
 
 def login(host, user, password):
   work, tok = tokUt.login(host=args['-H'], user=args['<user>'], password=args['<password>'])
@@ -194,7 +195,7 @@ def mkdir(type, credId, dirToMake, path=""):
 
 
 #<source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test, --testAll
-def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="",dest_path="", concurrency=1, pipesize=10, parallel=0, chunksize=64000, compress=False, encrypt=False, optimize="", overwrite=False, retry=5, verify=False, test=1):
+def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="",dest_path="", concurrency=1, pipesize=10, parallel=0, chunksize=64000, compress=False, encrypt=False, optimize="", overwrite=False, retry=5, verify=False):
     host, user, token = tokUt.readConfig()
     infoList=[]
     for f in file_list:
@@ -280,6 +281,7 @@ doc_dict = {
 if __name__ == '__main__':
     args = docopt(__doc__, version='OneDataShare 0.9.1')
     print(args)
+    concurrency,pipesize, parallel, chunksize, compress, encrypt, optimize, overwrite, retry, verify,test_time  = args.get("--concurrency", 1), int(args.get("--pipesize", 10)),int(args.get("--parallel", 0)),int(args.get("--chunksize", 64000)),args.get("--compress", False),args.get("--encrypt", False),args.get("--optimize", ""),args.get("--overwrite", False),int(args.get("--retry", 5)),args.get("--verify", False),int(args.get('--repeat', 1))
     if args['help']:
         if args['<command>'] in doc_dict:
             print(doc_dict[args['<command>']])
@@ -305,11 +307,8 @@ if __name__ == '__main__':
     elif args['mkdir']:
           mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
-        test_time = 1
-        if args['--repeat'] != None:
-          test_time = int(args['--repeat'])
         for i in range(0, test_time):
-          transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'], source_path= args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'], dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'])
+          transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'], source_path= args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'], dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'], concurrency=concurrency,pipesize=pipesize, parallel=parallel,chunksize=chunksize, compress=compress,encrypt=encrypt, optimize=optimize,overwrite=overwrite, retry=retry, verify=verify)
     elif args['query']:
           print('not yet implemented')
     elif args['testAll']:
@@ -326,7 +325,7 @@ if __name__ == '__main__':
                         temp = path
                         if endpoint_type in sourceDes_path:
                             path = sourceDes_path[endpoint_type]
-                        transfer(source_type=s_type, source_credid=s_credId, source_path= s_path, file_list=file, dest_type=endpoint_type, dest_credid=id, dest_path=path)
+                        transfer(source_type=s_type, source_credid=s_credId, source_path= s_path, file_list=file, dest_type=endpoint_type, dest_credid=id, dest_path=path, concurrency=concurrency,pipesize=pipesize, parallel=parallel,chunksize=chunksize, compress=compress,encrypt=encrypt, optimize=optimize,overwrite=overwrite, retry=retry, verify=verify)
                         path = temp
     elif args['rc_transfer']:
         times = int(args["--repeat"])
@@ -338,7 +337,7 @@ if __name__ == '__main__':
             for remote in remotes:
                 if remote != source_credid+":":
                     for i in range (0, times):
-                        if checkFile(remote, dest_path, file_name): 
+                        if checkFile(remote, dest_path, file_name):
                             print("delete file successful")
                             deleteFile("deletefile", remote, dest_path, file_name)
                         rcTransfer("copy", source_credid, source_path, file_name, remote, dest_path, p)

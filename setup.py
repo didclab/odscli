@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 
-        name ='cmdline',
+        name ='ods-cmdline',
 
         version ='1.0.0',
 
