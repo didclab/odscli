@@ -30,7 +30,9 @@ class QueryGui:
             job_id = job_ids[-1]
         print('monitoring', job_id, "every:", delta_t, 'sec')
         end_monitor = False
-        self.pretty_print_batch_job(self.mq.query_job_id_cdb(job_id))  # get the job table from the backend which gives start time and each steps start time
+        batch_job_json = self.mq.query_job_id_cdb(job_id)
+        if len(batch_job_json) > 1:
+            self.pretty_print_batch_job(batch_job_json)  # get the job table from the backend which gives start time and each steps start time
 
         initial_measurements = self.mq.query_job_id_influx(
             job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all measurements at first
