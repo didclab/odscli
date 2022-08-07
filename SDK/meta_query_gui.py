@@ -17,6 +17,10 @@ class QueryGui:
         self.retry = 3
 
     def monitor(self, job_id, delta_t):
+        if job_id is None:
+            #get the last job_id listed from the query
+            job_ids = self.mq.query_all_jobs_ids()
+            job_id = job_ids[-1]
         print('monitoring', job_id, "every:", delta_t,'sec')
         end_monitor = False
         batch_job_data_dict = self.mq.query_job_id_cdb(job_id)

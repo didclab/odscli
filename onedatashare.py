@@ -17,7 +17,7 @@ Usage:
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test=<times>]
   onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--repeat=<times>]
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
-  onedatashare.py monitor ( <job_id> ) [--delta_t=<DELTA_T>]
+  onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T>]
   onedatashare.py --version
 
 Commands:
@@ -291,9 +291,9 @@ if __name__ == '__main__':
                                     influx_only=bool(measurement_only), cdb_only=bool(batch_job_only), all=all_jobs, list_job_ids=list_job_ids)
     elif args['monitor']:
         qg = QueryGui()
-        job_id_list = args['<job_id>']
+        job_id = args['--job_id']
         delta_t = args['--delta_t']
-        qg.monitor(job_id_list, timeparse(delta_t))
+        qg.monitor(job_id, timeparse(delta_t))
     elif args['testAll']:
         endpoint_types = ["box", "dropbox", "s3", "ftp", "sftp"]
         t = 1
