@@ -4,10 +4,11 @@ import SDK.constants as constants
 
 
 class Iteminfo():
-    def __init__(self,id:str = "", path:str = "",size:int = -1):
+    def __init__(self, id:str = "", path:str = "", size:int = -1, chunk_size:int=10000000):
         self.id = id
         self.path = path
         self.size = size
+        self.chunkSize = chunk_size
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, 
