@@ -35,8 +35,9 @@ class QueryGui:
         batch_job_json = self.mq.query_job_id_cdb(job_id)
         job_start_retry = 0
 
-        while self.has_job_started(batch_job_json) and job_start_retry < 5:
+        while not self.has_job_started(batch_job_json) and job_start_retry < 5:
             batch_job_json = self.mq.query_job_id_cdb(job_id)
+            job_start_retry += 1
             time.sleep(delta_t)
 
         if len(batch_job_json) > 1:
