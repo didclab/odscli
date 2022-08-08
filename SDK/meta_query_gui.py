@@ -23,8 +23,6 @@ class QueryGui:
         self.files_df = pd.DataFrame
         self.job_size = 0
 
-
-
     def monitor(self, job_id, delta_t):
         if job_id is None:
             # get the last job_id listed from the query
@@ -41,9 +39,11 @@ class QueryGui:
             time.sleep(delta_t)
 
         if len(batch_job_json) > 1:
-            self.pretty_print_batch_job(batch_job_json)  # get the job table from the backend which gives start time and each steps start time
+            self.pretty_print_batch_job(
+                batch_job_json)  # get the job table from the backend which gives start time and each steps start time
 
-        initial_measurements = self.mq.query_job_id_influx(job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all measurements at first
+        initial_measurements = self.mq.query_job_id_influx(
+            job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all measurements at first
 
         if len(initial_measurements) > 0:
             self.pretty_print_influx_data(initial_measurements)
@@ -61,18 +61,16 @@ class QueryGui:
             if self.check_if_job_done(job_batch_cdb['status']):
                 print('Job Completed and took a total time')
                 self.pretty_print_batch_job(job_batch_cdb)
-                return
+                end_monitor = True
             print('\n')
             job_data_influx = resp.json()['measurementData']
-            self.pretty_print_influx_data(job_data_influx)
-
-            if self.check_if_job_done(resp.json()):
-                end_monitor = True
-
-            self.pretty_print_batch_job(batch_job_json=job_batch_cdb)
+            if len(job_data_influx) < 1:
+                local_retry += 1
+            else:
+                self.pretty_print_influx_data(job_data_influx)
 
             if local_retry > 3:
-                return
+                end_monitor = True
 
             time.sleep(delta_t)
 
@@ -155,13 +153,13 @@ class QueryGui:
     #       'readSkipcount', 'writeSkipCount', 'processSkipCount', 'rollbackCount',
     #       'exitCode', 'exitMessage', 'lastUpdated
     def pretty_print_batch_job(self, batch_job_json):
-        batch_job_cols_select = ['id', 'status', 'startTime', 'exitCode', 'exitMessage', 'lastUpdated']
+        batch_job_cols_select = ['id', 'status', 'startTime', 'endTime', 'exitCode', 'exitMessage', 'lastUpdated']
         df = pd.json_normalize(batch_job_json)
         self.job_batch_df = self.transform_start_end_last(df)
-        if 'endTime' not in batch_job_json:
-            self.job_batch_df['endTime']=np.nan
-        if 'startTime' not in batch_job_json:
-            self.job_batch_df['endTime']=np.nan
+        if 'endTime' not in self.job_batch_df:
+            self.job_batch_df['endTime'] = np.nan
+        if 'startTime' not in self.job_batch_df:
+            self.job_batch_df['endTime'] = np.nan
         print(self.job_batch_df[batch_job_cols_select].to_string())
 
         job_params = batch_job_json['jobParameters']
@@ -173,6 +171,11 @@ class QueryGui:
         files_cols_select = ['id', 'step_name', 'startTime', 'endTime', 'readCount', 'writeCount', 'lastUpdated',
                              'status']
         self.job_size = job_size = int(job_params['jobSize'])
+
+        if 'endTime' not in self.files_df:
+            self.files_df['endTime'] = np.nan
+        if 'startTime' not in self.files_df:
+            self.files_df['endTime'] = np.nan
         print('Total Job Size:', job_size)
         print("The Files in the transfer job request:\n")
         print(self.files_df[files_cols_select].to_string())
@@ -183,18 +186,20 @@ class QueryGui:
         influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent', 'compression',
                               'pipelining']
         influx_df = pd.DataFrame.from_records(meausrement_data_list)
-        # print(influx_df[influx_cols_select].to_string())
+        print(influx_df[influx_cols_select].to_string())
         if self.influx_df.empty:
             self.influx_df = influx_df
         else:
             self.influx_df = pd.concat([self.influx_df, influx_df])
             self.influx_df = self.influx_df.drop_duplicates().reset_index(drop=True)
+
         bytes_sent_so_far = self.influx_df['dataBytesSent'].sum()
         remaining_bytes = self.job_size - bytes_sent_so_far
         avg_throughput = self.influx_df['throughput'].mean()
-        remainingTime = avg_throughput/ remaining_bytes
+        remainingTime = avg_throughput / remaining_bytes
 
-        print("Job Size: ", self.job_size, " Bytes sent so far ", bytes_sent_so_far, " Bytes Remaining: ", remaining_bytes)
+        print("Job Size: ", self.job_size, " Bytes sent so far ", bytes_sent_so_far, " Bytes Remaining: ",
+              remaining_bytes)
         print("Average Throughput(column) so far: ", avg_throughput)
         print("Time remaining: ", remainingTime)
 
