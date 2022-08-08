@@ -231,7 +231,7 @@ class QueryGui:
 
         print("Job Size: ", self.job_size, " Bytes sent so far ", bytes_sent_so_far, " Bytes Remaining: ",
               remaining_bytes)
-        print("Average Throughput(column) so far: ", (avg_throughput/1000 * 8), 'Mbps')
+        print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput*8,' bits/second', ' Parsed throughput: ', ((avg_throughput/1000) * 8), 'Mbps')
         print("Time remaining: ", remainingTime)
 
     def print_finished_job(self):
