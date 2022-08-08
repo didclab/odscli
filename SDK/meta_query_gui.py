@@ -227,11 +227,11 @@ class QueryGui:
         if remaining_bytes == 0:
             print('Final influx call gives avg throughput unparsed: ', avg_throughput)
         else:
-            remainingTime = avg_throughput / remaining_bytes
+            remainingTime = remaining_bytes / avg_throughput
 
         print("Job Size: ", self.job_size, " Bytes sent so far ", bytes_sent_so_far, " Bytes Remaining: ",
               remaining_bytes)
-        print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput*8,' bits/second', ' Parsed throughput: ', ((avg_throughput/1000) * 8), 'Mbps')
+        print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput*8,' bits/second', ' Parsed throughput: ', ((avg_throughput/1000000) * 8), 'Mbps')
         print("Time remaining: ", remainingTime)
 
     def print_finished_job(self):
