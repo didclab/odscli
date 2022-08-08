@@ -50,6 +50,8 @@ class QueryGui:
             if len(resp.json()) == 0:
                 local_retry += 1
                 continue
+            if not batch_job_json:
+                continue
             job_batch_cdb = resp.json()['jobData']
             if self.check_if_job_done(job_batch_cdb['status']):
                 print('Job Completed and took a total time')
@@ -69,6 +71,10 @@ class QueryGui:
 
             time.sleep(int(delta_t))
 
+    def has_job_started(self, batch_job_json):
+        if 'startTime' not in batch_job_json:
+            return False
+        return True
     def check_if_job_done(self, status):
         if status == "COMPLETED" or status == "FAILED" or status == "ABANDONED" or status == "STOPPED" or status == "STOPPING":
             return True
@@ -144,6 +150,8 @@ class QueryGui:
         df = pd.json_normalize(batch_job_json)
         self.job_batch_df = self.transform_start_end_last(df)
         if 'endTime' not in batch_job_json:
+            self.job_batch_df['endTime']=np.nan
+        if 'startTime' not in batch_job_json:
             self.job_batch_df['endTime']=np.nan
         print(self.job_batch_df[batch_job_cols_select].to_string())
 
