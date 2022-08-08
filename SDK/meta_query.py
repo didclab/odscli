@@ -21,10 +21,8 @@ class MetaQueryAPI:
         self.token = token
 
     def query_job_id_cdb(self, job_id):
-        print(job_id)
         param = {"jobId": job_id}
         hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + JOB
-        print(hostStr)
         cookies = dict(ATOKEN=self.token)
         headers = {"Authorization": "Bearer " + self.token + ""}
         r = requests.get(hostStr, headers=headers, cookies=cookies,
