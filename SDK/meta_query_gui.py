@@ -50,9 +50,9 @@ class QueryGui:
             if len(resp.json()) == 0:
                 local_retry += 1
                 continue
-            if not batch_job_json:
-                continue
             job_batch_cdb = resp.json()['jobData']
+            if not self.has_job_started(job_batch_cdb):
+                continue
             if self.check_if_job_done(job_batch_cdb['status']):
                 print('Job Completed and took a total time')
                 self.pretty_print_batch_job(job_batch_cdb)
@@ -72,9 +72,12 @@ class QueryGui:
             time.sleep(int(delta_t))
 
     def has_job_started(self, batch_job_json):
-        if 'startTime' not in batch_job_json:
-            return False
-        return True
+        if 'endTime' in batch_job_json:
+            return True
+        if 'startTime' in batch_job_json:
+            return True
+        else:
+            return True
     def check_if_job_done(self, status):
         if status == "COMPLETED" or status == "FAILED" or status == "ABANDONED" or status == "STOPPED" or status == "STOPPING":
             return True
