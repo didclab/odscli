@@ -291,7 +291,7 @@ if __name__ == '__main__':
         qg = QueryGui()
         job_id = args['--job_id']
         delta_t = args['--delta_t']
-        qg.monitor(job_id, timeparse(delta_t))
+        qg.monitor(job_id, int(timeparse(delta_t)))
     elif args['testAll']:
         endpoint_types = ["box", "dropbox", "s3", "ftp", "sftp"]
         t = 1

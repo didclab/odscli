@@ -23,6 +23,8 @@ class QueryGui:
         self.files_df = pd.DataFrame
         self.job_size = 0
 
+
+
     def monitor(self, job_id, delta_t):
         if job_id is None:
             # get the last job_id listed from the query
@@ -31,24 +33,26 @@ class QueryGui:
         print('monitoring', job_id, "every:", delta_t, 'sec')
         end_monitor = False
         batch_job_json = self.mq.query_job_id_cdb(job_id)
+        job_start_retry = 0
+
+        while self.has_job_started(batch_job_json) and job_start_retry < 5:
+            batch_job_json = self.mq.query_job_id_cdb(job_id)
+            time.sleep(delta_t)
+
         if len(batch_job_json) > 1:
             self.pretty_print_batch_job(batch_job_json)  # get the job table from the backend which gives start time and each steps start time
 
-        initial_measurements = self.mq.query_job_id_influx(
-            job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all measurements at first
+        initial_measurements = self.mq.query_job_id_influx(job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all measurements at first
 
         if len(initial_measurements) > 0:
             self.pretty_print_influx_data(initial_measurements)
 
         local_retry = 0
-
         while end_monitor is False and local_retry < 3:
             resp = self.mq.monitor(job_id=job_id)
-            if not resp.ok:
+            if not resp.ok or len(resp.json()) == 0:
                 local_retry += 1
-                continue
-            if len(resp.json()) == 0:
-                local_retry += 1
+                time.sleep(delta_t)
                 continue
             job_batch_cdb = resp.json()['jobData']
             if not self.has_job_started(job_batch_cdb):
@@ -69,7 +73,7 @@ class QueryGui:
             if local_retry > 3:
                 return
 
-            time.sleep(int(delta_t))
+            time.sleep(delta_t)
 
     def has_job_started(self, batch_job_json):
         if 'endTime' in batch_job_json:
@@ -77,7 +81,8 @@ class QueryGui:
         if 'startTime' in batch_job_json:
             return True
         else:
-            return True
+            return False
+
     def check_if_job_done(self, status):
         if status == "COMPLETED" or status == "FAILED" or status == "ABANDONED" or status == "STOPPED" or status == "STOPPING":
             return True
