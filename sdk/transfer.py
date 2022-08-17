@@ -1,6 +1,6 @@
 import json
 import requests
-import SDK.constants as constants
+import sdk.constants as constants
 
 
 class Iteminfo():

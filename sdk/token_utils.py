@@ -1,7 +1,7 @@
 import os
 import requests
 import configparser
-import SDK.constants as constants
+import sdk.constants as constants
 #Adds the hostname, username, password and user token for the ACTIVE onedatashare backend
 # odsConfig.ini
 #Python ConfigParser

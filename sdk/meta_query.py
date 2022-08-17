@@ -1,6 +1,6 @@
 import requests
-import SDK.constants as constants
-import SDK.token_utils as tok
+import sdk.constants as constants
+import sdk.token_utils as tok
 BASEPATH = "/api/metadata"
 JOB = "/job"
 ALL = "/all"

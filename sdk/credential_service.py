@@ -1,8 +1,8 @@
 import requests
-import SDK.endpoint
-from SDK.endpoint import EndpointType
-from SDK.endpoint import EndpointTypeOAUTH
-import SDK.constants as constants
+import sdk.endpoint
+from sdk.endpoint import EndpointType
+from sdk.endpoint import EndpointTypeOAUTH
+import sdk.constants as constants
 
 
 class CredService:        

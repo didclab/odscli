@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from SDK.meta_query import MetaQueryAPI
+from sdk.meta_query import MetaQueryAPI
 from tabulate import tabulate
 from datetime import datetime
 import time
