@@ -1,3 +1,4 @@
+#!/opt/homebrew/bin/python3
 """OneDataShare CLI for interacting with onedatashare.org or directly to your local transfer-service/vfs-node/data-mover
 Things to know when writing:
 <> = WORDSINCAPS    stand for arguments and do not require flags just write the values in order
@@ -13,9 +14,10 @@ Usage:
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test=<times>]
-  onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>) [--repeat=<times>]
-  onedatashare.py query <jobId>
+  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimize=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>]
+  onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>)
+  onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
+  onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T>]
   onedatashare.py --version
 
 Commands:
@@ -27,42 +29,44 @@ Commands:
     mkdir           Creates a directory on an added server. This requires credential Id, type, and a path to create
     transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize, test
     query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
+    monitor         Monitors the given list of job ids. Which means it downloads and displays the data and consumes the terminal till all jobs are done. It defaults to using the last job id in case no job id is specified
     testAll         Submit a transfer job with test purpose to all existing credential id
     login           Executes the login with the required parameters, if that fails will attempt to use env variables ODS_CLI_USER, ODS_CLI_PWD.
 
 Options:
-  -h --help         Show this screen.
-  -v, --version     Show version.
-  -H HOST           The host of the onedatashare deployment [default: onedatashare.org]
-  --credId          A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
-  type              A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, gftp(pending), http, vfs, scp
-  --jsonprint       A boolean flag to print out the response in json [default: ""]
-  --path=<path>     A string that is the parent of all the resources we are covering in the operation. Many times this can be empty [default: ]
-  --concurrency     The number of concurrent connections you wish to use on your transfer [default: 1]
-  --pipesize        The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
-  --parallel        The number of parallel threads to use for every concurrent connection
-  --chunksize       The number of bytes for every read operation default is 64KB [default: 64000]
-  --compress        A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
-  --encrypt         A boolean flag to enable encryption. Currently not supported [default: False]
-  --optimize        A string flag that allows the user to select which form of optimization to use. [default: False]
-  --overwrite       A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this [default: False]
-  --retry           An integer that represents the number of retries for every single file. Generally I would keep this below 10 [default: 5]
-  --verify          A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
-  --test=<times>    An integer that represents the number of tests that you wish to transfer this file to destination
-  --repet=<times>   An integer to represents the number of testAll will run
+  -h --help  Show this screen.
+  -v, --version  Show version.
+  -H HOST  The host of the onedatashare deployment [default: onedatashare.org]
+  --credId  A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
+  type  A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, http, vfs, scp
+  --jsonprint  A boolean flag to print out the response in json [default: ""]
+  --path=<path>  A string that is the parent of all the resources we are covering in the operation. Many times this can be empty [default: ]
+  --concurrency=<CONCURRENCY>  The number of concurrent connections you wish to use on your transfer [default: 1]
+  --pipesize=<PIPE_SIZE>  The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
+  --parallel=<PARALLEL>  The number of parallel threads to use for every concurrent connection [default: 1]
+  --chunksize=<CHUNK_SIZE>  The number of bytes for every read operation default is 64MB [default: 64000000]
+  --compress=<COMPRESS>  A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
+  --encrypt=<ENCRPTY>  A boolean flag to enable encryption. Currently not supported [default: False]
+  --optimize=<OPTIMIZE>  A string flag that allows the user to select which form of optimization to use. [default: False]
+  --overwrite=<OVERWRITE>  A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this. [default: False]
+  --retry=<RETRY>  An integer that represents the number of retries for every single file. Generally I would keep this below 10. [default: 5]
+  --verify=<VERIFY>  A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
+  --job_id=<JOB_ID>  A job id to query for and all data that occurred during that job.
+  --start_date=<START_DATE>  If used alone then the query will get all jobs launched at said time.
+  --end_date=<END_DATE>  Used to determine the second point on the line to query all jobs between start and end.
+  --batch_job_only=<BATCH_JOB_ONLY>  A flag that tells the cli to disable querying for job parameter information [default: True]
+  --measurement_only=<MEASUREMENT_ONLY>  A flag that tells the cli to disable querying for time series measurements. [default: True]
+  --delta_t=<DELTA_T>  A flag that has a time interval to poll monitoring. [default: 15s]
+  --all  Will download all of the respective data associated with the measurement, and batch flags. [default: False]
+  --list_job_ids  Will list all of the jobIds associated to the user [default: False]
 """
 
-from asyncore import file_dispatcher
 from docopt import docopt
 import os
 import json
-import pprint
-import requests
 from datetime import datetime
-# SDK IMPORTS
 import SDK.token_utils as tokUt
 from SDK.credential_service import CredService as CredS
-import SDK.endpoint
 from SDK.endpoint import Endpoint as endpoint, EndpointType
 from SDK.transfer import TransferRequest
 from SDK.transfer import TransferOptions
@@ -70,6 +74,8 @@ from SDK.transfer import Source
 from SDK.transfer import Destination
 from SDK.transfer import Iteminfo
 from SDK.transfer import Transfer as Transfer
+from SDK.meta_query_gui import QueryGui
+from pytimeparse.timeparse import timeparse
 
 
 def login(host, user, password):
@@ -206,13 +212,18 @@ def mkdir(type, credId, dirToMake, path=""):
 
 # <source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test, --testAll
 def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="", concurrency=1,
-             pipesize=10, parallel=0, chunksize=64000, compress=False, encrypt=False, optimize="", overwrite=False,
+             pipesize=10, parallel=0, chunksize=10000000, compress=False, encrypt=False, optimize="", overwrite=False,
              retry=5, verify=False, test=1):
     host, user, token = tokUt.readConfig()
     infoList = []
     for f in file_list:
-        if os.path.exists(f):
-            infoList.append(Iteminfo(path=f, id=os.path.basename(f), size=0))
+        if os.path.isabs(f):
+            infoList.append(Iteminfo(path=f, id=os.path.basename(f), size=0, chunk_size=chunksize))
+        else:
+            print('The path you supplied: ', f,
+                  '\n is not a valid path. Please supply the absolute path for each file, or the path relative to the users home.')
+        # if os.path.exists(f):
+        #     infoList.append(Iteminfo(path=f, id=os.path.basename(f), size=0, chunk_size=chunksize))
 
     source = Source(infoList=infoList, type=source_type, credentialId=source_credid,
                     parentInfo=Iteminfo(source_path, source_path, 0))
@@ -258,15 +269,29 @@ if __name__ == '__main__':
     elif args['mkdir']:
         mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
-        test_time = 1
-        if args['--test'] != None:
-            test_time = int(args['--test'])
-        for i in range(0, test_time):
-            transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'],
-                     source_path=args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'],
-                     dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'])
+        #onedatashare.py transfer [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify]
+        transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'],
+                 source_path=args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'],
+                 dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'], concurrency=args['--concurrency'], chunksize=args['--chunksize'],
+                 parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'], optimize=args['--optimize'],overwrite=args['--overwrite'],retry=args['--retry'], verify=args['--verify'])
+
     elif args['query']:
-        print('not yet implemented')
+        qg = QueryGui()
+        job_id = args['--job_id']
+        start_date = args['--start_date']
+        end_date = args['--end_date']
+        batch_job_only = args['--batch_job_only']
+        measurement_only = args['--measurement_only']
+        all_jobs = bool(args['--all'])
+        list_job_ids = bool(args['--list_job_ids'])
+        qg.get_data(job_id=job_id, end_date=end_date, start_date=start_date,
+                    influx_only=bool(measurement_only), cdb_only=bool(batch_job_only), all=all_jobs,
+                    list_job_ids=list_job_ids)
+    elif args['monitor']:
+        qg = QueryGui()
+        job_id = args['--job_id']
+        delta_t = args['--delta_t']
+        qg.monitor(job_id, int(timeparse(delta_t)))
     elif args['testAll']:
         endpoint_types = ["box", "dropbox", "s3", "ftp", "sftp"]
         t = 1

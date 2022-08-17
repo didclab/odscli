@@ -1,14 +1,19 @@
 import os
 import requests
 import configparser
-import SDK.constants as constants
+import sdk.constants as constants
 #Adds the hostname, username, password and user token for the ACTIVE onedatashare backend
 # odsConfig.ini
 #Python ConfigParser
+
+config_path=os.environ['HOME']+"/.config/"
+config_file_name = ".odsConfig.ini"
+config_absolute_path = config_path + config_file_name
 def writeConfig(hostname,username,token):
     config = configparser.ConfigParser()
     config["OneDataShare"] = {'hostname':hostname,'username':username,'token':token}
-    with open('odsConfig.ini','w') as configfile:
+    os.makedirs(config_path, exist_ok=True)
+    with open(config_absolute_path, 'w') as configfile:
         try:
             config.write(configfile)
         except:
@@ -17,10 +22,11 @@ def writeConfig(hostname,username,token):
 #Throws Exception when there is an issue reading config or it does not exist
 #Returns Hostname, Username, Token
 #Python ConfigParser
+
 def readConfig():
     config = configparser.ConfigParser()
     try:
-        config.read('odsConfig.ini')
+        config.read(config_absolute_path)
     except:
         print('Config Read Issue are you logged in?')
         return False

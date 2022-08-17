@@ -1,9 +1,9 @@
 import requests
 import json
-import SDK.token_utils as tokenUtils
+import sdk.token_utils as tokenUtils
 from abc import ABC, abstractmethod
 from enum import Enum
-import SDK.constants as constants
+import sdk.constants as constants
 
 class EndpointType(Enum):
     VFS = "vfs"
@@ -18,7 +18,7 @@ class EndpointTypeOAUTH(Enum):
     GFTP = "globus"
 
 class Endpoint():
-    #NEEDS TO BE IMPLEMENTED FOR SDK
+    #NEEDS TO BE IMPLEMENTED FOR sdk
     #def create(type:EndpointType,cred_id:str,ODS_AUTH_TOKEN:str):
         #raise NotImplemented()
     #Takes a string in and returns the type and boolean of isOAuth (str,bool)
