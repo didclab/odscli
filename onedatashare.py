@@ -65,16 +65,16 @@ from docopt import docopt
 import os
 import json
 from datetime import datetime
-import SDK.token_utils as tokUt
-from SDK.credential_service import CredService as CredS
-from SDK.endpoint import Endpoint as endpoint, EndpointType
-from SDK.transfer import TransferRequest
-from SDK.transfer import TransferOptions
-from SDK.transfer import Source
-from SDK.transfer import Destination
-from SDK.transfer import Iteminfo
-from SDK.transfer import Transfer as Transfer
-from SDK.meta_query_gui import QueryGui
+import sdk.token_utils as tokUt
+from sdk.credential_service import CredService as CredS
+from sdk.endpoint import Endpoint as endpoint, EndpointType
+from sdk.transfer import TransferRequest
+from sdk.transfer import TransferOptions
+from sdk.transfer import Source
+from sdk.transfer import Destination
+from sdk.transfer import Iteminfo
+from sdk.transfer import Transfer as Transfer
+from sdk.meta_query_gui import QueryGui
 from pytimeparse.timeparse import timeparse
 
 
