@@ -206,10 +206,11 @@ class QueryGui:
 
     # Used to keep track of total sent and the throughput achieved by summing the bytes sent and total time from startime to lastUpdated.
     # This is another interpretation of throughput. Then we can print the final throughput at the end of the job.
-    def pretty_print_influx_data(self, meausrement_data_list):
+    def pretty_print_influx_data(self, measurement_data_list):
         influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent',
                               'pipelining']
-        influx_df = pd.DataFrame.from_records(meausrement_data_list)
+        print(measurement_data_list)
+        influx_df = pd.DataFrame.from_records(measurement_data_list)
         for col in influx_cols_select:
             if col not in influx_df:
                 influx_df[col] = np.nan
