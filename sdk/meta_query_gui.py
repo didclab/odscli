@@ -164,7 +164,7 @@ class QueryGui:
     def finished_job_stdout(self, batch_job_cdb):
         df = pd.json_normalize(batch_job_cdb)
         job_size = (int(batch_job_cdb['jobParameters']['jobSize']) / 1000000) * 8  # convert Bytes to MB then to Mb
-        print('Job size in Megabytes: ', job_size)
+        print('Job size in Megabits: ', job_size)
         self.job_batch_df = self.transform_start_end_last(df)
         totalSeconds = pd.Timedelta(
             self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
