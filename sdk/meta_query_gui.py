@@ -38,7 +38,7 @@ class QueryGui:
         return batch_job_json
 
     def monitor(self, job_id, delta_t):
-        max_retry=5
+        max_retry = 5
         print('monitoring', job_id, "every:", delta_t, 'sec')
         if job_id is None:
             # get the last job_id listed from the query
@@ -64,7 +64,7 @@ class QueryGui:
             job_data_influx = self.mq.query_job_id_influx(job_id)
             if len(job_batch_cdb) < 1:
                 print(job_batch_cdb)
-                print('Failed to get job batch table information retry: ', local_retry, '/',max_retry)
+                print('Failed to get job batch table information retry: ', local_retry, '/', max_retry)
                 local_retry += 1
                 time.sleep(delta_t)
                 continue
@@ -73,7 +73,7 @@ class QueryGui:
             if len(job_data_influx) < 1:
                 print(job_data_influx)
                 local_retry += 1
-                print('No Influx data yet retry: ', local_retry, '/',max_retry)
+                print('No Influx data yet retry: ', local_retry, '/', max_retry)
                 time.sleep(delta_t)
                 continue
             else:
@@ -167,7 +167,8 @@ class QueryGui:
         job_size = (int(batch_job_cdb['jobParameters']['jobSize']) / 1000000) * 8  # convert Bytes to MB then to Mb
         print('Job size in Megabytes: ', job_size)
         self.job_batch_df = self.transform_start_end_last(df)
-        totalSeconds = pd.Timedelta(self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
+        totalSeconds = pd.Timedelta(
+            self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
         print('Total Time for job to complete: ', totalSeconds)
         print('Total Job throughput: ', job_size / totalSeconds, 'Mbps')
 
@@ -176,7 +177,7 @@ class QueryGui:
     #       'readSkipcount', 'writeSkipCount', 'processSkipCount', 'rollbackCount',
     #       'exitCode', 'exitMessage', 'lastUpdated
     def pretty_print_batch_job(self, batch_job_json):
-        #job batch information printing
+        # job batch information printing
         batch_job_cols_select = ['id', 'status', 'startTime', 'endTime', 'exitCode', 'exitMessage', 'lastUpdated']
         df = pd.json_normalize(batch_job_json)
         self.job_batch_df = self.transform_start_end_last(df)
@@ -185,13 +186,13 @@ class QueryGui:
                 self.job_batch_df[batch_col] = np.nan
         print(self.job_batch_df[batch_job_cols_select].to_string())
 
-        #job param printing
+        # job param printing
         job_params = batch_job_json['jobParameters']
         if 'jobSize' not in job_params:
             job_params['jobSize'] = 0
         self.job_size = job_size = int(job_params['jobSize'])
 
-        #step information printing
+        # step information printing
         files_df = pd.json_normalize(batch_job_json['batchSteps'])
         self.files_df = self.transform_start_end_last(files_df)
 
@@ -210,6 +211,9 @@ class QueryGui:
         influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent', 'compression',
                               'pipelining']
         influx_df = pd.DataFrame.from_records(meausrement_data_list)
+        for col in influx_cols_select:
+            if col not in influx_df:
+                influx_df[col] = np.nan
         print(influx_df[influx_cols_select].to_string())
         if self.influx_df.empty:
             self.influx_df = influx_df
@@ -228,7 +232,8 @@ class QueryGui:
 
         print("Job Size: ", self.job_size, " Bytes sent so far ", bytes_sent_so_far, " Bytes Remaining: ",
               remaining_bytes)
-        print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput*8,' bits/second', ' Parsed throughput: ', ((avg_throughput/1000000) * 8), 'Mbps')
+        print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput * 8,
+              ' bits/second', ' Parsed throughput: ', ((avg_throughput / 1000000) * 8), 'Mbps')
         print("Time remaining: ", remainingTime)
 
     def print_finished_job(self):
