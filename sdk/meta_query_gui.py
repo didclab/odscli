@@ -38,6 +38,7 @@ class QueryGui:
         return batch_job_json
 
     def monitor(self, job_id, delta_t):
+        max_retry=5
         print('monitoring', job_id, "every:", delta_t, 'sec')
         if job_id is None:
             # get the last job_id listed from the query
@@ -45,9 +46,6 @@ class QueryGui:
             job_id = job_ids[-1]
 
         batch_job_json = self.job_start(job_id, delta_t)
-        if batch_job_json is None:
-            print('Failed to Monitor jobId: ', job_id)
-            return
         if len(batch_job_json) > 1:
             self.pretty_print_batch_job(
                 batch_job_json)  # get the job table from the backend which gives start time and each steps start time
@@ -60,39 +58,34 @@ class QueryGui:
 
         local_retry = 0
         end_monitor = False
-        print('Entering monitoring phase')
-        while end_monitor is False:
+        while end_monitor is False and local_retry < max_retry:
             # resp = self.mq.monitor(job_id=job_id)
             job_batch_cdb = self.mq.query_job_id_cdb(job_id)
             job_data_influx = self.mq.query_job_id_influx(job_id)
             if len(job_batch_cdb) < 1:
                 print(job_batch_cdb)
-                print('Failed to get job batch table information')
+                print('Failed to get job batch table information retry: ', local_retry, '/',max_retry)
                 local_retry += 1
                 time.sleep(delta_t)
                 continue
+            else:
+                self.pretty_print_batch_job(job_batch_cdb)
             if len(job_data_influx) < 1:
                 print(job_data_influx)
-                print('No Influx data yet')
                 local_retry += 1
-                local_retry += 1
+                print('No Influx data yet retry: ', local_retry, '/',max_retry)
                 time.sleep(delta_t)
                 continue
+            else:
+                self.pretty_print_influx_data(job_data_influx)
 
             if self.check_if_job_done(job_batch_cdb['status']):
                 print('\n', job_id, ' has final status of ', job_batch_cdb['status'])
                 self.finished_job_stdout(batch_job_cdb=job_batch_cdb)
                 return
 
-            if len(job_data_influx) < 1:
-                local_retry += 1
-            else:
-                self.pretty_print_influx_data(job_data_influx)
-
-            # if local_retry > 3:
-            #     print('Failed to monitor transfer 3 times')
-            #     end_monitor = True
-
+            if local_retry == 9:
+                print('Failed to monitor transfer ')
             time.sleep(delta_t)
 
     def has_job_started(self, batch_job_json):
@@ -183,26 +176,30 @@ class QueryGui:
     #       'readSkipcount', 'writeSkipCount', 'processSkipCount', 'rollbackCount',
     #       'exitCode', 'exitMessage', 'lastUpdated
     def pretty_print_batch_job(self, batch_job_json):
+        #job batch information printing
         batch_job_cols_select = ['id', 'status', 'startTime', 'endTime', 'exitCode', 'exitMessage', 'lastUpdated']
         df = pd.json_normalize(batch_job_json)
         self.job_batch_df = self.transform_start_end_last(df)
-        if 'endTime' not in self.job_batch_df:
-            self.job_batch_df['endTime'] = np.nan
-        if 'startTime' not in self.job_batch_df:
-            self.job_batch_df['endTime'] = np.nan
+        for batch_col in batch_job_cols_select:
+            if batch_col not in self.job_batch_df:
+                self.job_batch_df[batch_col] = np.nan
         print(self.job_batch_df[batch_job_cols_select].to_string())
 
+        #job param printing
         job_params = batch_job_json['jobParameters']
+        if 'jobSize' not in job_params:
+            job_params['jobSize'] = 0
+        self.job_size = job_size = int(job_params['jobSize'])
+
+        #step information printing
         files_df = pd.json_normalize(batch_job_json['batchSteps'])
         self.files_df = self.transform_start_end_last(files_df)
 
-        files_cols_select = ['id', 'step_name', 'startTime', 'status']
-        self.job_size = job_size = int(job_params['jobSize'])
+        files_cols_select = ['id', 'step_name', 'startTime', 'status', 'startTime', 'endTime']
+        for col in files_cols_select:
+            if col not in self.files_df:
+                self.files_df[col] = np.nan
 
-        if 'endTime' not in self.files_df:
-            self.files_df['endTime'] = np.nan
-        if 'startTime' not in self.files_df:
-            self.files_df['endTime'] = np.nan
         print('Total Job Size:', job_size)
         print("The Files in the transfer job request:\n")
         print(self.files_df[files_cols_select].to_string())

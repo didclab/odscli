@@ -56,7 +56,7 @@ Options:
   --end_date=<END_DATE>  Used to determine the second point on the line to query all jobs between start and end.
   --batch_job_only=<BATCH_JOB_ONLY>  A flag that tells the cli to disable querying for job parameter information [default: True]
   --measurement_only=<MEASUREMENT_ONLY>  A flag that tells the cli to disable querying for time series measurements. [default: True]
-  --delta_t=<DELTA_T>  A flag that has a time interval to poll monitoring. [default: 15s]
+  --delta_t=<DELTA_T>  A flag that has a time interval to poll monitoring. [default: 10s]
   --all  Will download all of the respective data associated with the measurement, and batch flags. [default: False]
   --list_job_ids  Will list all of the jobIds associated to the user [default: False]
 """
