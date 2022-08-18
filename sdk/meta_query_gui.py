@@ -43,9 +43,9 @@ class QueryGui:
         if job_id is None:
             # get the last job_id listed from the query
             job_ids = self.mq.query_all_jobs_ids()
-            job_id = job_ids[-1]
+            job_id = job_ids[-1] #get most recent jobId
 
-        batch_job_json = self.job_start(job_id, delta_t)
+        batch_job_json = self.job_start(job_id, delta_t) #check if job has started if so print before loop
         if len(batch_job_json) > 1:
             self.pretty_print_batch_job(
                 batch_job_json)  # get the job table from the backend which gives start time and each steps start time
@@ -54,7 +54,7 @@ class QueryGui:
             job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all
         # measurements at first
         if len(initial_measurements) > 0:
-            self.pretty_print_influx_data(initial_measurements)
+            self.pretty_print_influx_data(initial_measurements) #print what we achomplished before monitoring
 
         local_retry = 0
         end_monitor = False
@@ -70,14 +70,13 @@ class QueryGui:
                 continue
             else:
                 self.pretty_print_batch_job(job_batch_cdb)
-            if len(job_data_influx) < 1:
-                print(job_data_influx)
-                local_retry += 1
-                print('No Influx data yet retry: ', local_retry, '/', max_retry)
-                time.sleep(delta_t)
-                continue
-            else:
-                self.pretty_print_influx_data(job_data_influx)
+                if len(job_data_influx) < 1:
+                    print(job_data_influx)
+                    print('No Monitoring data yet')
+                    time.sleep(delta_t)
+                    continue
+                else:
+                    self.pretty_print_influx_data(job_data_influx)
 
             if self.check_if_job_done(job_batch_cdb['status']):
                 print('\n', job_id, ' has final status of ', job_batch_cdb['status'])
@@ -208,7 +207,7 @@ class QueryGui:
     # Used to keep track of total sent and the throughput achieved by summing the bytes sent and total time from startime to lastUpdated.
     # This is another interpretation of throughput. Then we can print the final throughput at the end of the job.
     def pretty_print_influx_data(self, meausrement_data_list):
-        influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent', 'compression',
+        influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent',
                               'pipelining']
         influx_df = pd.DataFrame.from_records(meausrement_data_list)
         for col in influx_cols_select:
