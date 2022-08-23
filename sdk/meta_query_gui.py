@@ -16,7 +16,7 @@ COMPLETED = "COMPLETED"
 #                print('\tTotal Time for job to complete: ', totalSeconds, file=f)
 #                print('\tTotal Job throughput: ', job_size / totalSeconds, 'Mbps', file=f)
 
-csv_headers = ['jobId', 'jobSize (MB)', 'totalSeconds', 'throughput (Mbps)']
+csv_headers = ['jobId', 'jobSize (MB)', 'totalSeconds', 'throughput (Mbps)', 'concurrency', 'parallelism', 'pipelining', 'sourceType', 'destType']
 
 
 class QueryGui:
@@ -175,6 +175,13 @@ class QueryGui:
         df = pd.json_normalize(batch_job_cdb)
         job_size = (int(batch_job_cdb['jobParameters']['jobSize']) / 1000000) * 8  # convert Bytes to MB then to Mb
         self.job_batch_df = self.transform_start_end_last(df)
+        concurrency = batch_job_cdb['jobParameters']['concurrency']
+        parallelism = batch_job_cdb['jobParameters']['parallelism']
+        pipelining = batch_job_cdb['jobParameters']['pipelining']
+        sourceCredType = batch_job_cdb['jobParameters']['sourceCredentialType']
+        destCredType = batch_job_cdb['jobParameters']['destCredentialType']
+        csv_headers = ['jobId', 'jobSize (MB)', 'totalSeconds', 'throughput (Mbps)', 'concurrency', 'parallelism',
+                       'pipelining', 'sourceType', 'destType']
         totalSeconds = pd.Timedelta(
             self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
         thrpt = job_size / totalSeconds
@@ -187,7 +194,7 @@ class QueryGui:
                 with open(abs_path, 'a+') as f:
                     csvwriter = csv.writer(f, lineterminator="\n")
                     csvwriter.writerow(csv_headers)
-            csv_data = [job_id, job_size, totalSeconds, thrpt]
+            csv_data = [job_id, job_size, totalSeconds, thrpt, concurrency, parallelism, pipelining, sourceCredType, destCredType]
             with open(abs_path, "a+") as f:
                 csvwriter = csv.writer(f, lineterminator="\n")
                 csvwriter.writerow(csv_data)
