@@ -6,11 +6,17 @@ from datetime import datetime
 import time
 from pathlib import Path
 import pprint
+import csv
 
 # STARTING, STARTED, STOPPING,
 # STOPPED, FAILED, COMPLETED, ABANDONED
 
 COMPLETED = "COMPLETED"
+#                print('\tJob size in Megabits: ', job_size, file=f)
+#                print('\tTotal Time for job to complete: ', totalSeconds, file=f)
+#                print('\tTotal Job throughput: ', job_size / totalSeconds, 'Mbps', file=f)
+
+csv_headers = ['jobId', 'jobSize (MB)', 'totalSeconds', 'throughput (Mbps)']
 
 
 class QueryGui:
@@ -45,9 +51,9 @@ class QueryGui:
         if job_id is None:
             # get the last job_id listed from the query
             job_ids = self.mq.query_all_jobs_ids()
-            job_id = job_ids[-1] #get most recent jobId
+            job_id = job_ids[-1]  # get most recent jobId
 
-        batch_job_json = self.job_start(job_id, delta_t) #check if job has started if so print before loop
+        batch_job_json = self.job_start(job_id, delta_t)  # check if job has started if so print before loop
         if len(batch_job_json) > 1:
             self.pretty_print_batch_job(
                 batch_job_json)  # get the job table from the backend which gives start time and each steps start time
@@ -56,7 +62,7 @@ class QueryGui:
             job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all
         # measurements at first
         if len(initial_measurements) > 0:
-            self.pretty_print_influx_data(initial_measurements) #print what we achomplished before monitoring
+            self.pretty_print_influx_data(initial_measurements)  # print what we achomplished before monitoring
 
         local_retry = 0
         end_monitor = False
@@ -171,17 +177,25 @@ class QueryGui:
         self.job_batch_df = self.transform_start_end_last(df)
         totalSeconds = pd.Timedelta(
             self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
+        thrpt = job_size / totalSeconds
         if output_file is not None:
             output_path = Path(output_file)
             abs_path = output_path.expanduser()
 
             if not abs_path.exists():
                 abs_path.parents[0].mkdir(parents=True, exist_ok=True)
+                with open(abs_path, 'a+') as f:
+                    csvwriter = csv.writer(f, lineterminator="\n")
+                    csvwriter.writerow(csv_headers)
+            csv_data = [job_id, job_size, totalSeconds, thrpt]
             with open(abs_path, "a+") as f:
-                print('***** JobId: ', job_id, file=f)
-                print('\tJob size in Megabits: ', job_size, file=f)
-                print('\tTotal Time for job to complete: ', totalSeconds, file=f)
-                print('\tTotal Job throughput: ', job_size / totalSeconds, 'Mbps', file=f)
+                csvwriter = csv.writer(f, lineterminator="\n")
+                csvwriter.writerow(csv_data)
+                # print('***** JobId: ', job_id, file=f)
+                # print('\tJob size in Megabits: ', job_size, file=f)
+                # print('\tTotal Time for job to complete: ', totalSeconds, file=f)
+                # print('\tTotal Job throughput: ', thrpt, 'Mbps', file=f)
+
         else:
             print('***** JobId: ', job_id)
             print('\tJob size in Megabits: ', job_size)
