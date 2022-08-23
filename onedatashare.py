@@ -17,7 +17,7 @@ Usage:
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimize=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>]
   onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>)
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
-  onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T>]
+  onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
   onedatashare.py --version
 
 Commands:
@@ -59,6 +59,7 @@ Options:
   --delta_t=<DELTA_T>  A flag that has a time interval to poll monitoring. [default: 10s]
   --all  Will download all of the respective data associated with the measurement, and batch flags. [default: False]
   --list_job_ids  Will list all of the jobIds associated to the user [default: False]
+  --experiment_file=<EXP_FILE>  The file to dump all timings of a running job
 """
 
 from docopt import docopt
@@ -291,7 +292,8 @@ if __name__ == '__main__':
         qg = QueryGui()
         job_id = args['--job_id']
         delta_t = args['--delta_t']
-        qg.monitor(job_id, int(timeparse(delta_t)))
+        file_to_dump_times = args['--experiment_file']
+        qg.monitor(job_id, int(timeparse(delta_t)), file_to_dump_times)
     elif args['testAll']:
         endpoint_types = ["box", "dropbox", "s3", "ftp", "sftp"]
         t = 1

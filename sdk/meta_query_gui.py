@@ -4,6 +4,7 @@ from sdk.meta_query import MetaQueryAPI
 from tabulate import tabulate
 from datetime import datetime
 import time
+from pathlib import Path
 import pprint
 
 # STARTING, STARTED, STOPPING,
@@ -37,7 +38,8 @@ class QueryGui:
             time.sleep(delta_t)
         return batch_job_json
 
-    def monitor(self, job_id, delta_t):
+    def monitor(self, job_id, delta_t, output_file):
+        print('output times to ', output_file)
         max_retry = 5
         print('monitoring', job_id, "every:", delta_t, 'sec')
         if job_id is None:
@@ -66,21 +68,21 @@ class QueryGui:
                 print(job_batch_cdb)
                 print('Failed to get job batch table information retry: ', local_retry, '/', max_retry)
                 local_retry += 1
-                time.sleep(delta_t)
-                continue
+                # time.sleep(delta_t)
+                # continue
             else:
                 self.pretty_print_batch_job(job_batch_cdb)
                 if len(job_data_influx) < 1:
                     print(job_data_influx)
                     print('No Monitoring data yet')
-                    time.sleep(delta_t)
-                    continue
+                    # time.sleep(delta_t)
+                    # continue
                 else:
                     self.pretty_print_influx_data(job_data_influx)
 
             if self.check_if_job_done(job_batch_cdb['status']):
                 print('\n', job_id, ' has final status of ', job_batch_cdb['status'])
-                self.finished_job_stdout(batch_job_cdb=job_batch_cdb)
+                self.finished_job_stdout(batch_job_cdb=job_batch_cdb, output_file=output_file, job_id=job_id)
                 return
 
             if local_retry == 9:
@@ -126,6 +128,7 @@ class QueryGui:
             elif all is True:
                 job_batch_json = self.mq.all_user_stats_cdb()
                 job_influx_json = self.mq.all_user_measurements_influx()
+
         elif cdb_only is True:
             if job_id is not None and int(job_id) > 0:
                 job_batch_json = self.mq.query_job_id_cdb(job_id)
@@ -161,15 +164,29 @@ class QueryGui:
                 "Invalid date format please do yyyy-mm-ddTHH:MM for submitting time format for start_date and end_date")
         return res
 
-    def finished_job_stdout(self, batch_job_cdb):
+    def finished_job_stdout(self, batch_job_cdb, output_file, job_id):
+
         df = pd.json_normalize(batch_job_cdb)
         job_size = (int(batch_job_cdb['jobParameters']['jobSize']) / 1000000) * 8  # convert Bytes to MB then to Mb
-        print('Job size in Megabits: ', job_size)
         self.job_batch_df = self.transform_start_end_last(df)
         totalSeconds = pd.Timedelta(
             self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
-        print('Total Time for job to complete: ', totalSeconds)
-        print('Total Job throughput: ', job_size / totalSeconds, 'Mbps')
+        if output_file is not None:
+            output_path = Path(output_file)
+            abs_path = output_path.expanduser()
+
+            if not abs_path.exists():
+                abs_path.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(abs_path, "a+") as f:
+                print('***** JobId: ', job_id, file=f)
+                print('\tJob size in Megabits: ', job_size, file=f)
+                print('\tTotal Time for job to complete: ', totalSeconds, file=f)
+                print('\tTotal Job throughput: ', job_size / totalSeconds, 'Mbps', file=f)
+        else:
+            print('***** JobId: ', job_id)
+            print('\tJob size in Megabits: ', job_size)
+            print('\tTotal Time for job to complete: ', totalSeconds)
+            print('\tTotal Job throughput: ', job_size / totalSeconds)
 
     # 'id', 'version', 'step_name', 'jobInstanceId', 'startTime', 'endTime',
     #       'status', 'commitCount', 'readCount', 'filterCount', 'writeCount',
