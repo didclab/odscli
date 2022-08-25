@@ -43,7 +43,10 @@ class MetaQueryAPI:
         headers = {"Authorization": "Bearer " + self.token + ""}
         r = requests.get(hostStr, headers=headers, cookies=cookies,
                          params=param)  # Needs to be handled better for errors
-        return r.json()
+        if r.status_code > 400:
+            return ""
+        else:
+            return r.json()
 
     def all_user_stats_cdb(self):
         hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + ALL + JOBS
