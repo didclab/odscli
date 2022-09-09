@@ -11,6 +11,7 @@ class EndpointType(Enum):
     FTP = "ftp"
     S3 = "s3"
     HTTP = "http"
+    SCP = "scp"
 class EndpointTypeOAUTH(Enum):
     BOX = "box"
     DROPBOX = "dropbox"
