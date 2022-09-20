@@ -1,6 +1,7 @@
 import requests
 import sdk.constants as constants
 import sdk.token_utils as tok
+from sdk.log import Log
 BASEPATH = "/api/metadata"
 JOB = "/job"
 ALL = "/all"
@@ -19,6 +20,7 @@ class MetaQueryAPI:
         self.host = host
         self. user = user
         self.token = token
+        self.log = Log()
 
     def query_job_id_cdb(self, job_id):
         param = {"jobId": job_id}
@@ -27,7 +29,8 @@ class MetaQueryAPI:
         headers = {"Authorization": "Bearer " + self.token + ""}
         r = requests.get(hostStr, headers=headers, cookies=cookies,
                          params=param)  # Needs to be handled better for errors
-        return r.json()
+        print("Job Batch Data:")
+        self.log.print_data(r.json())
 
     def query_all_jobs_ids(self):
         hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + "/all/job/ids"
@@ -46,7 +49,8 @@ class MetaQueryAPI:
         if r.status_code > 400:
             return ""
         else:
-            return r.json()
+            print("Influx Measurements Data:")
+            self.log.print_data(r.json())
 
     def all_user_stats_cdb(self):
         hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + ALL + JOBS

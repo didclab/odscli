@@ -152,9 +152,6 @@ class QueryGui:
             elif all is True:
                 job_influx_json = self.mq.all_user_measurements_influx()
 
-        print("Job Batch Data: ", job_batch_json)
-        print("Influx Measurements Data: ", job_influx_json)
-
     def parse_time(self, time):
         if time is None:
             return None
