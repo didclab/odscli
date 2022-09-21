@@ -15,7 +15,6 @@ Usage:
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimize=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>]
-  onedatashare.py testAll (<source_type> <source_credid> <source_path> (-f FILES)... <dest_path>)
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
   onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
   onedatashare.py --version
@@ -27,10 +26,9 @@ Commands:
     ls              List operation on a server that has been added to onedatashare. This requires a credential Id and a type, the path is optional.
     rm              Remove operation on an added server. Requires a credential Id, type, and a path(either folder or file). If a directory is passed then it will recursively delete the directory
     mkdir           Creates a directory on an added server. This requires credential Id, type, and a path to create
-    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize, test
+    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,
     query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     monitor         Monitors the given list of job ids. Which means it downloads and displays the data and consumes the terminal till all jobs are done. It defaults to using the last job id in case no job id is specified
-    testAll         Submit a transfer job with test purpose to all existing credential id
     login           Executes the login with the required parameters, if that fails will attempt to use env variables ODS_CLI_USER, ODS_CLI_PWD.
 
 Options:
@@ -211,10 +209,10 @@ def mkdir(type, credId, dirToMake, path=""):
     print(res)
 
 
-# <source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify, --test, --testAll
+# <source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify
 def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="", concurrency=1,
              pipesize=10, parallel=0, chunksize=10000000, compress=False, encrypt=False, optimize="", overwrite=False,
-             retry=5, verify=False, test=1):
+             retry=5, verify=False):
     host, user, token = tokUt.readConfig()
     infoList = []
     for f in file_list:
@@ -241,7 +239,7 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
 
 def transfernode_direct(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="",
                         concurrency=1, pipesize=10, parallel=0, chunksize=64000, compress=False, encrypt=False,
-                        optimize="", overwrite=False, retry=5, verify=False, test=1):
+                        optimize="", overwrite=False, retry=5, verify=False):
     source = Source(infoList=file_list, type=source_type, credentialId=source_credid,
                     parentInfo=Iteminfo(source_path, source_path))
 
@@ -294,21 +292,3 @@ if __name__ == '__main__':
         delta_t = args['--delta_t']
         file_to_dump_times = args['--experiment_file']
         qg.monitor(job_id, int(timeparse(delta_t)), file_to_dump_times)
-    elif args['testAll']:
-        endpoint_types = ["box", "dropbox", "s3", "ftp", "sftp"]
-        t = 1
-        if (args['--repeat'] != None): t = int(args['--repeat'])
-        s_type, s_credId, s_path, file, path = args['<source_type>'], args['<source_credid>'], args['<source_path>'], \
-                                               args['FILES'], args['<dest_path>']
-        sourceDes_path = {"box": "156757741686", "s3": " ", "dropbox": "/" + path + "/" + file}
-        for time in range(0, t):
-            for endpoint_type in endpoint_types:
-                cred_list = listRemote(endpoint_type)
-                for id in cred_list:
-                    if s_type != endpoint_type:
-                        temp = path
-                        if endpoint_type in sourceDes_path:
-                            path = sourceDes_path[endpoint_type]
-                        transfer(source_type=s_type, source_credid=s_credId, source_path=s_path, file_list=file,
-                                 dest_type=endpoint_type, dest_credid=id, dest_path=path)
-                        path = temp
