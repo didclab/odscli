@@ -1,11 +1,5 @@
 #!/opt/homebrew/bin/python3
 """OneDataShare CLI for interacting with onedatashare.org or directly to your local transfer-service/vfs-node/data-mover
-Things to know when writing:
-<> = WORDSINCAPS    stand for arguments and do not require flags just write the values in order
-[]                  stand for optional arguments or anything within the braces is optional
---                  According to POSIX std all arguments are positional arguments even tho they might look like options
--                   Program will take input from std input vs from file. Not hard std of POSIX
-To do any kind of OAuth endpoints such as: Google Drive, Dropbox, Box, GridFTP please add credential through onedatashare.org directly
 
 Usage:
   onedatashare.py login [<user> <password>] [-H HOST]
@@ -32,32 +26,32 @@ Commands:
     login           Executes the login with the required parameters, if that fails will attempt to use env variables ODS_CLI_USER, ODS_CLI_PWD.
 
 Options:
-  -h --help  Show this screen.
-  -v, --version  Show version.
-  -H HOST  The host of the onedatashare deployment [default: onedatashare.org]
-  --credId  A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
-  type  A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, http, vfs, scp
-  --jsonprint  A boolean flag to print out the response in json [default: ""]
-  --path=<path>  A string that is the parent of all the resources we are covering in the operation. Many times this can be empty [default: ]
-  --concurrency=<CONCURRENCY>  The number of concurrent connections you wish to use on your transfer [default: 1]
-  --pipesize=<PIPE_SIZE>  The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
-  --parallel=<PARALLEL>  The number of parallel threads to use for every concurrent connection [default: 1]
-  --chunksize=<CHUNK_SIZE>  The number of bytes for every read operation default is 64MB [default: 64000000]
-  --compress=<COMPRESS>  A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
-  --encrypt=<ENCRPTY>  A boolean flag to enable encryption. Currently not supported [default: False]
-  --optimize=<OPTIMIZE>  A string flag that allows the user to select which form of optimization to use. [default: False]
-  --overwrite=<OVERWRITE>  A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this. [default: False]
-  --retry=<RETRY>  An integer that represents the number of retries for every single file. Generally I would keep this below 10. [default: 5]
-  --verify=<VERIFY>  A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
-  --job_id=<JOB_ID>  A job id to query for and all data that occurred during that job.
-  --start_date=<START_DATE>  If used alone then the query will get all jobs launched at said time.
-  --end_date=<END_DATE>  Used to determine the second point on the line to query all jobs between start and end.
-  --batch_job_only=<BATCH_JOB_ONLY>  A flag that tells the cli to disable querying for job parameter information [default: True]
-  --measurement_only=<MEASUREMENT_ONLY>  A flag that tells the cli to disable querying for time series measurements. [default: True]
-  --delta_t=<DELTA_T>  A flag that has a time interval to poll monitoring. [default: 10s]
-  --all  Will download all of the respective data associated with the measurement, and batch flags. [default: False]
-  --list_job_ids  Will list all of the jobIds associated to the user [default: False]
-  --experiment_file=<EXP_FILE>  The file to dump all timings of a running job
+  -h --help         Show this screen.
+  -v, --version     Show version.
+  -H HOST           The host of the onedatashare deployment [default: onedatashare.org]
+  --credId          A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
+  --type            A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, http, vfs, scp
+  --jsonprint       A boolean flag to print out the response in json [default: ""]
+  --path=<path>     A string that is the parent of all the resources we are covering in the operation. Many times this can be empty [default: ]
+  --concurrency=<CONCURRENCY>   The number of concurrent connections you wish to use on your transfer [default: 1]
+  --pipesize=<PIPE_SIZE>        The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
+  --parallel=<PARALLEL>         The number of parallel threads to use for every concurrent connection [default: 1]
+  --chunksize=<CHUNK_SIZE>      The number of bytes for every read operation default is 64MB [default: 64000000]
+  --compress=<COMPRESS>         A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
+  --encrypt=<ENCRPTY>           A boolean flag to enable encryption. Currently not supported [default: False]
+  --optimize=<OPTIMIZE>         A string flag that allows the user to select which form of optimization to use. [default: False]
+  --overwrite=<OVERWRITE>       A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this. [default: False]
+  --retry=<RETRY>               An integer that represents the number of retries for every single file. Generally I would keep this below 10. [default: 5]
+  --verify=<VERIFY>             A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
+  --job_id=<JOB_ID>             A job id to query for and all data that occurred during that job.
+  --start_date=<START_DATE>     If used alone then the query will get all jobs launched at said time.
+  --end_date=<END_DATE>         Used to determine the second point on the line to query all jobs between start and end.
+  --batch_job_only=<BATCH_JOB_ONLY>     A flag that tells the cli to disable querying for job parameter information [default: True]
+  --measurement_only=<MEASUREMENT_ONLY>     A flag that tells the cli to disable querying for time series measurements. [default: True]
+  --delta_t=<DELTA_T>       A flag that has a time interval to poll monitoring. [default: 10s]
+  --all     Will download all of the respective data associated with the measurement, and batch flags. [default: False]
+  --list_job_ids    Will list all of the jobIds associated to the user [default: False]
+  --experiment_file=<EXP_FILE>      The file to dump all timings of a running job
 """
 
 from docopt import docopt
@@ -216,13 +210,7 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     host, user, token = tokUt.readConfig()
     infoList = []
     for f in file_list:
-        if os.path.isabs(f):
-            infoList.append(Iteminfo(path=f, id=os.path.basename(f), size=0, chunk_size=chunksize))
-        else:
-            print('The path you supplied: ', f,
-                  '\n is not a valid path. Please supply the absolute path for each file, or the path relative to the users home.')
-        # if os.path.exists(f):
-        #     infoList.append(Iteminfo(path=f, id=os.path.basename(f), size=0, chunk_size=chunksize))
+        infoList.append(Iteminfo(path=f, id=f, size=0, chunk_size=chunksize))
 
     source = Source(infoList=infoList, type=source_type, credentialId=source_credid,
                     parentInfo=Iteminfo(source_path, source_path, 0))
@@ -246,7 +234,8 @@ def transfernode_direct(source_type, source_credid, file_list, dest_type, dest_c
 
 # ( <source_credid> <source_path> (-f FILE)... <dest_type> <dest_credid> <dest_path>)
 if __name__ == '__main__':
-    args = docopt(__doc__, version='OneDataShare 0.9.1')
+    args = docopt(__doc__, version='OneDataShare 0.0.1')
+    print(args)
     if args['login']:
         login(host=args["-H"], user=args["<user>"], password=str(args['<password>']))
     elif args['logout']:
