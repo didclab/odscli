@@ -4,7 +4,7 @@
 Usage:
   onedatashare.py login [<user> <password>] [-H HOST]
   onedatashare.py logout
-  onedatashare.py addRemote (<user> (--pass=<pass> | --keyfile=<keyfile>) <host> <type>) [--credentialId=<credId>]
+  onedatashare.py addRemote (<user> <host> <type>) [--pass=<pass> --keyfile=<keyfile> --credentialId=<credId>]
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
@@ -107,19 +107,14 @@ def addRemote(remoteHost, remoteUser, remotePassword, keyfile, type, credId):
         CredS.oauth_Url(host, typeE, token)
     else:
         # First, check to make sure both are not none.
-        if keyfile == "" and remotePassword == "":
-            print("Password Error: No password given")
-        elif keyfile != None and remotePassword != None:
-            print("Password Error: Both password types given, please only provide one")
+        if keyfile != None and keyfile != "":
+            print("Used the keyfile")
+            with open(keyfile, "r") as f:
+                keyfile = f.read()
+            CredS.register_Credential(host, typeE, credId, remoteHost, remoteUser, keyfile, token)
         else:
-            if keyfile != None and keyfile != "":
-                print("Used the keyfile")
-                with open(keyfile, "r") as f:
-                    keyfile = f.read()
-                CredS.register_Credential(host, typeE, credId, remoteHost, remoteUser, keyfile, token)
-            else:
-                print("Used the password")
-                CredS.register_Credential(host, typeE, credId, remoteHost, remoteUser, remotePassword, token)
+            print("Used the password")
+            CredS.register_Credential(host, typeE, credId, remoteHost, remoteUser, remotePassword, token)
 
 
 def listRemote(type):
@@ -235,7 +230,6 @@ def transfernode_direct(source_type, source_credid, file_list, dest_type, dest_c
 # ( <source_credid> <source_path> (-f FILE)... <dest_type> <dest_credid> <dest_path>)
 if __name__ == '__main__':
     args = docopt(__doc__, version='OneDataShare 0.0.1')
-    print(args)
     if args['login']:
         login(host=args["-H"], user=args["<user>"], password=str(args['<password>']))
     elif args['logout']:
@@ -257,11 +251,14 @@ if __name__ == '__main__':
     elif args['mkdir']:
         mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
-        #onedatashare.py transfer [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify]
+        # onedatashare.py transfer [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify]
         transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'],
                  source_path=args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'],
-                 dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'], concurrency=args['--concurrency'], chunksize=args['--chunksize'],
-                 parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'], optimize=args['--optimize'],overwrite=args['--overwrite'],retry=args['--retry'], verify=args['--verify'])
+                 dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'], concurrency=args['--concurrency'],
+                 chunksize=args['--chunksize'],
+                 parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'],
+                 optimize=args['--optimize'], overwrite=args['--overwrite'], retry=args['--retry'],
+                 verify=args['--verify'])
 
     elif args['query']:
         qg = QueryGui()
