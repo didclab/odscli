@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 import pprint
 import csv
-
+from sdk.log import Log
 # STARTING, STARTED, STOPPING,
 # STOPPED, FAILED, COMPLETED, ABANDONED
 
@@ -29,6 +29,7 @@ class QueryGui:
         self.job_batch_df = pd.DataFrame
         self.files_df = pd.DataFrame
         self.job_size = 0
+        self.log = Log()
 
     def job_start(self, job_id, delta_t):
         job_start_retry = 0
@@ -152,6 +153,23 @@ class QueryGui:
             elif all is True:
                 job_influx_json = self.mq.all_user_measurements_influx()
 
+        print("1. Complex/Complete data")
+        print("2. Simple data")
+        option = input("Select one of the above options regarding the data: ")
+        if option not in ["1", "2"]:
+            print("Invalid option")
+            return
+        print("Job Batch Data: ")
+        if option == "1":
+            print(job_batch_json)
+        elif option == "2":
+            self.log.print_data(job_batch_json)
+        print("Influx Measurements Data:")
+        if option == "1":
+            print(job_influx_json)
+        elif option == "2":
+            self.pretty_print_influx_data(job_influx_json)
+
     def parse_time(self, time):
         if time is None:
             return None
@@ -244,7 +262,6 @@ class QueryGui:
     def pretty_print_influx_data(self, measurement_data_list):
         influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent',
                               'pipelining']
-        print(measurement_data_list)
         influx_df = pd.DataFrame.from_records(measurement_data_list)
         for col in influx_cols_select:
             if col not in influx_df:
