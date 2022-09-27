@@ -213,7 +213,7 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     transferOptions = TransferOptions(concurrency, pipesize, chunksize, parallel, compress, encrypt, optimize,
                                       overwrite, retry, verify)
     transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
-
+    print('Sending Transfer Request: ', transferRequest)
     r = Transfer.transfer(host, token, transferRequest)
 
     print("status code: " + str(r.status_code))
