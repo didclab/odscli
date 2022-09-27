@@ -43,6 +43,8 @@ class QueryGui:
             if job_start_retry > 5:
                 return None
             time.sleep(delta_t)
+        if len(batch_job_json) > 1:
+            self.pretty_print_batch_job(batch_job_json)  # get the job table from the backend which gives start time and each steps start time
         return batch_job_json
 
     def monitor(self, job_id, delta_t, output_file):
@@ -54,16 +56,11 @@ class QueryGui:
             job_ids = self.mq.query_all_jobs_ids()
             job_id = job_ids[-1]  # get most recent jobId
 
-        batch_job_json = self.job_start(job_id, delta_t)  # check if job has started if so print before loop
-        if len(batch_job_json) > 1:
-            self.pretty_print_batch_job(
-                batch_job_json)  # get the job table from the backend which gives start time and each steps start time
+        self.job_start(job_id, delta_t)  # check if job has started if so print before loop
 
-        initial_measurements = self.mq.query_job_id_influx(
-            job_id)  # this is here incase the user calls monitoring much later than job start time. It will get all
-        # measurements at first
-        if len(initial_measurements) > 0:
-            self.pretty_print_influx_data(initial_measurements)  # print what we achomplished before monitoring
+        influx_job_data = self.mq.query_job_id_influx(job_id)
+        if len(influx_job_data) > 0:
+            self.pretty_print_influx_data(influx_job_data)  # print what we achomplished before monitoring
 
         local_retry = 0
         end_monitor = False
