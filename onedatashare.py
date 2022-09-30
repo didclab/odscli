@@ -260,7 +260,7 @@ if __name__ == '__main__':
                  chunksize=args['--chunksize'],
                  parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'],
                  optimize=args['--optimize'], overwrite=args['--overwrite'], retry=args['--retry'],
-                 verify=args['--verify'])
+                 verify=args['--verify'], pipesize=args['--pipesize'])
 
     elif args['query']:
         qg = QueryGui()
