@@ -2,7 +2,7 @@
 """OneDataShare CLI for interacting with onedatashare.org or directly to your local transfer-service/vfs-node/data-mover
 
 Usage:
-  onedatashare.py login [-H HOST]
+  onedatashare.py login [--user=<USER> --password=<PWD> -H HOST]
   onedatashare.py logout
   onedatashare.py addRemote (<user> <host> <type>) [--pass=<pass> --keyfile=<keyfile> --credentialId=<credId>]
   onedatashare.py rmRemote (<credId> <type>)
@@ -28,6 +28,8 @@ Commands:
 Options:
   -h --help         Show this screen.
   -v, --version     Show version.
+  --user=<USER>     The username to use for login
+  --password=<PWD>  The password to use for login
   -H HOST           The host of the onedatashare deployment [default: onedatashare.org]
   --credId          A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
   --type            A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, http, vfs, scp
@@ -231,8 +233,8 @@ def transfernode_direct(source_type, source_credid, file_list, dest_type, dest_c
 if __name__ == '__main__':
     args = docopt(__doc__, version='OneDataShare 0.0.1')
     if args['login']:
-        user = input("Username: ")
-        password = input("Password: ")
+        user = args["--user"] if "--user" in args else ""
+        password = args["--password"] if "--password" in args else ""
         login(host=args["-H"], user=user, password=password)
     elif args['logout']:
         logout()
