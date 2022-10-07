@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 import pprint
 import csv
+import json
+
 
 # STARTING, STARTED, STOPPING,
 # STOPPED, FAILED, COMPLETED, ABANDONED
@@ -152,8 +154,10 @@ class QueryGui:
             elif all is True:
                 job_influx_json = self.mq.all_user_measurements_influx()
 
-        print("Job Batch Data: ", job_batch_json)
-        print("Influx Measurements Data: ", job_influx_json)
+        # print("Job Batch Data: ", job_batch_json)
+        return job_batch_json, job_influx_json
+
+
 
     def parse_time(self, time):
         if time is None:

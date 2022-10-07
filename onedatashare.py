@@ -77,6 +77,7 @@ from sdk.transfer import Iteminfo
 from sdk.transfer import Transfer as Transfer
 from sdk.meta_query_gui import QueryGui
 from pytimeparse.timeparse import timeparse
+import pandas as pd
 
 
 def login(host, user, password):
@@ -285,9 +286,24 @@ if __name__ == '__main__':
         measurement_only = args['--measurement_only']
         all_jobs = bool(args['--all'])
         list_job_ids = bool(args['--list_job_ids'])
-        qg.get_data(job_id=job_id, end_date=end_date, start_date=start_date,
+        batch_json, influx_json = qg.get_data(job_id=job_id, end_date=end_date, start_date=start_date,
                     influx_only=bool(measurement_only), cdb_only=bool(batch_job_only), all=all_jobs,
                     list_job_ids=list_job_ids)
+        print(len(influx_json))
+        # print(influx_json)
+        # print(batch_json)
+        if len(influx_json)!= 0:
+            influx_df = pd.DataFrame(influx_json)
+            print(job_id)
+            influx_df.to_csv('/Users/rajatjain/OneDataShare/RL-Optimizer/data/historical_data/influx_{}.json'.format(job_id))
+        # print(pd.DataFrame(batch_json['batchSteps']))
+        # with open('/Users/rajatjain/OneDataShare/RL-Optimizer/data/sample_job_{}.json'.format(job_id), 'w') as f:
+        #     json.dump(batch_json, f)
+        #
+        # with open('/Users/rajatjain/OneDataShare/RL-Optimizer/data/sample_influx_{}.json'.format(job_id), 'w') as f:
+        #     json.dump(influx_json, f)
+
+
     elif args['monitor']:
         qg = QueryGui()
         job_id = args['--job_id']
