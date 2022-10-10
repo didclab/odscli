@@ -8,6 +8,7 @@ from pathlib import Path
 import pprint
 import csv
 from sdk.log import Log
+import plotext as plt
 # STARTING, STARTED, STOPPING,
 # STOPPED, FAILED, COMPLETED, ABANDONED
 
@@ -263,10 +264,13 @@ class QueryGui:
         influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent',
                               'pipelining']
         influx_df = pd.DataFrame.from_records(measurement_data_list)
+        pd.set_option('display.max_columns', None)
+        print(influx_df.head())
         for col in influx_cols_select:
             if col not in influx_df:
                 influx_df[col] = np.nan
         print(influx_df[influx_cols_select].to_string())
+
         if self.influx_df.empty:
             self.influx_df = influx_df
         else:
@@ -288,6 +292,8 @@ class QueryGui:
               ' bits/second', ' Parsed throughput: ', ((avg_throughput / 1000000) * 8), 'Mbps')
         print("Time remaining: ", remainingTime)
 
+        self.plot_graphs(influx_df)
+
     def print_finished_job(self):
         print('Job Completed with values')
 
@@ -299,3 +305,24 @@ class QueryGui:
         if 'lastUpdated' in df.columns:
             df['lastUpdated'] = pd.to_datetime(df['lastUpdated'])
         return df
+
+    def plot_graphs(self, influx_df):
+        print("\n")
+        time = [x for x in range(influx_df.shape[0])]
+        time_labels = [x for x in range(0, influx_df.shape[0], 3)]
+        plt.subplots(2, 1)
+
+        plt.subplot(1, 1).plot_size(2*plt.tw()/3, plt.th()/3)
+        plt.subplot(1, 1).plot(time, influx_df['throughput'])
+        plt.subplot(1, 1).xlabel("Time")
+        plt.subplot(1, 1).ylabel("Throughput")
+        plt.subplot(1, 1).xticks(time_labels)
+        plt.subplot(1, 1).title("Throughput Plot")
+
+        plt.subplot(2, 1).plot_size(2*plt.tw()/3, plt.th()/3)
+        plt.subplot(2, 1).plot(influx_df['parallelism'], label = "Parallelism")
+        plt.subplot(2, 1).plot(influx_df['concurrency'], label = "Concurrency")
+        plt.subplot(2, 1).plot(influx_df['pipelining'], label = "Pipelining")
+        plt.subplot(2, 1).xlabel("Time")
+        plt.subplot(2, 1).xticks(time_labels)
+        plt.show()
