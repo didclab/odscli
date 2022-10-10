@@ -261,14 +261,14 @@ class QueryGui:
     # Used to keep track of total sent and the throughput achieved by summing the bytes sent and total time from startime to lastUpdated.
     # This is another interpretation of throughput. Then we can print the final throughput at the end of the job.
     def pretty_print_influx_data(self, measurement_data_list):
-        influx_cols_select = ['jobId', 'throughput', 'concurrency', 'parallelism', 'dataBytesSent',
-                              'pipelining']
+        influx_cols_select = ['throughput', 'concurrency', 'parallelism', 'dataBytesSent',
+                              'pipelining', 'rtt', 'dropin', 'dropout']
         influx_df = pd.DataFrame.from_records(measurement_data_list)
-        pd.set_option('display.max_columns', None)
-        print(influx_df.head())
         for col in influx_cols_select:
             if col not in influx_df:
                 influx_df[col] = np.nan
+        if len(measurement_data_list) > 0:
+            print('Job Id: ', measurement_data_list[0]['jobId'])
         print(influx_df[influx_cols_select].to_string())
 
         if self.influx_df.empty:
@@ -313,9 +313,10 @@ class QueryGui:
         plt.subplots(2, 1)
 
         plt.subplot(1, 1).plot_size(2*plt.tw()/3, plt.th()/3)
-        plt.subplot(1, 1).plot(time, influx_df['throughput'])
-        plt.subplot(1, 1).xlabel("Time")
-        plt.subplot(1, 1).ylabel("Throughput")
+        y = [x/1e6 for x in influx_df['throughput']]
+        plt.subplot(1, 1).plot(time, y)
+        plt.subplot(1, 1).xlabel("Time(s)")
+        plt.subplot(1, 1).ylabel("Throughput(Mbps)")
         plt.subplot(1, 1).xticks(time_labels)
         plt.subplot(1, 1).title("Throughput Plot")
 
@@ -323,6 +324,6 @@ class QueryGui:
         plt.subplot(2, 1).plot(influx_df['parallelism'], label = "Parallelism")
         plt.subplot(2, 1).plot(influx_df['concurrency'], label = "Concurrency")
         plt.subplot(2, 1).plot(influx_df['pipelining'], label = "Pipelining")
-        plt.subplot(2, 1).xlabel("Time")
+        plt.subplot(2, 1).xlabel("Time(s)")
         plt.subplot(2, 1).xticks(time_labels)
         plt.show()
