@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 
-        name ='cmdline',
+        name ='odscli',
 
         version ='1.0.0',
 
@@ -18,7 +18,7 @@ setup(
 
             'console_scripts': [
 
-                'main = cmdline:main'
+                'odscli = onedatashare.onedatashare:main'
 
             ]
 
@@ -31,6 +31,16 @@ setup(
             "Operating System :: OS Independent",
 
         ),
+        install_requires = [
+            "requests",
+            "pandas",
+            "docopt",
+            "tabulate",
+            "python-dateutil",
+            "pytimeparse",
+            "pprintpp",
+            "plotext"
+        ],
 
 
         zip_safe = False

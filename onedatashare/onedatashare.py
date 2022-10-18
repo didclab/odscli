@@ -230,7 +230,7 @@ def transfernode_direct(source_type, source_credid, file_list, dest_type, dest_c
 
 
 # ( <source_credid> <source_path> (-f FILE)... <dest_type> <dest_credid> <dest_path>)
-if __name__ == '__main__':
+def main():
     args = docopt(__doc__, version='OneDataShare 0.0.1')
     if args['login']:
         user = args["--user"] if "--user" in args else ""
@@ -282,3 +282,6 @@ if __name__ == '__main__':
         delta_t = args['--delta_t']
         file_to_dump_times = args['--experiment_file']
         qg.monitor(job_id, int(timeparse(delta_t)), file_to_dump_times)
+
+if __name__ == '__main__':
+    main()
