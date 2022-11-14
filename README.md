@@ -5,6 +5,7 @@ Installation & Setup
 -------
 #TODO
 **Require Packages,**
+pip3 install -r requirements.txt
 **Quick Install VIA PIP,**
 **Remove interactive features,**
 
