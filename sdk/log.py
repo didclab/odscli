@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime
+import plotext as plt
 
 class Log:
     def print_data(self, data):
@@ -48,8 +49,39 @@ class Log:
             else:
                 print("\t", key, ": ", value)
 
+        if data["status"] == "COMPLETED":
+            self.plot_graphs(data["jobParameters"], batchSteps)
+
     def time_difference(self, start_time, end_time):
         start_date_time_obj = datetime.fromisoformat(start_time.split("+")[0])
         end_date_time_obj = datetime.fromisoformat(end_time.split("+")[0])
         tdelta = end_date_time_obj - start_date_time_obj
         return tdelta.total_seconds()
+
+    def plot_graphs(self, data, batchSteps):
+        plot_data = {}
+        for id, batch_step in batchSteps.items():
+            step_name = batch_step["step_name"]
+            if step_name not in plot_data:
+                timeTaken = batch_step["timeTaken"]
+            if data[step_name]:
+                size = self.process_data(data[step_name])
+            try:
+                plot_data[step_name] = ((int(size) / 1000000) * 8) / timeTaken
+            except(Exception):
+                continue
+        xticks = [x for x in range(len(plot_data))]
+
+        plt.plot_size(plt.tw(), plt.th()/3)
+        plt.plot(xticks, plot_data.values())
+        plt.xlabel("File Name")
+        plt.ylabel("Throughput(Mbps)")
+        plt.xticks([x for x in range(len(plot_data))], plot_data.keys())
+        plt.title("Throughput Plot")
+        plt.show()
+
+    def process_data(self, data):
+        data = data.split(",")
+        for i in data:
+            if "size" in i:
+                return i.split("=")[1]
