@@ -293,8 +293,6 @@ class QueryGui:
         print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput * 8,
               ' bits/second', ' Parsed throughput: ', ((avg_throughput / 1000000) * 8), 'Mbps')
         print("Time remaining: ", remainingTime)
-        #if not self.influx_df.empty:
-        #    self.plot_graphs(self.influx_df)
 
     def print_finished_job(self):
         print('Job Completed with values')
