@@ -69,6 +69,7 @@ class Log:
             try:
                 plot_data[step_name] = ((int(size) / 1000000) * 8) / timeTaken
             except(Exception):
+                print("Plot not generated for ", step_name)
                 continue
         xticks = [x for x in range(len(plot_data))]
 
