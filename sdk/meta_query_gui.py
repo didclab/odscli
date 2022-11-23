@@ -167,6 +167,8 @@ class QueryGui:
             print(job_influx_json)
         elif option == "2":
             self.pretty_print_influx_data(job_influx_json)
+            if job_batch_json["status"] != "COMPLETED":
+                self.plot_graphs(self.influx_df)
 
     def parse_time(self, time):
         if time is None:
@@ -288,8 +290,6 @@ class QueryGui:
         print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput * 8,
               ' bits/second', ' Parsed throughput: ', ((avg_throughput / 1000000) * 8), 'Mbps')
         print("Time remaining: ", remainingTime)
-
-        self.plot_graphs(influx_df)
 
     def print_finished_job(self):
         print('Job Completed with values')
