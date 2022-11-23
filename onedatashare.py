@@ -208,7 +208,8 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     host, user, token = tokUt.readConfig()
     infoList = []
     for f in file_list:
-        infoList.append(Iteminfo(path=f, id=f, size=0, chunk_size=chunksize))
+        if len(f) > 0:
+            infoList.append(Iteminfo(path=f, id=f, size=0, chunk_size=chunksize))
 
     source = Source(infoList=infoList, type=source_type, credentialId=source_credid,
                     parentInfo=Iteminfo(source_path, source_path, 0))
