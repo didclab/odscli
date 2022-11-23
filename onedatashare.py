@@ -4,7 +4,7 @@
 Usage:
   onedatashare.py login [--user=<USER> --password=<PWD> -H HOST]
   onedatashare.py logout
-  onedatashare.py addRemote (<user> <host> <type>) [--pass=<pass> --keyfile=<keyfile> --credentialId=<credId>]
+  onedatashare.py addRemote (<host> <type>) [--user=<USER> --pass=<pass> --keyfile=<keyfile> --credentialId=<credId>]
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
@@ -28,8 +28,9 @@ Commands:
 Options:
   -h --help         Show this screen.
   -v, --version     Show version.
-  --user=<USER>     The username to use for login
+  --user=<USER>     The username to use for login [default: ]
   --password=<PWD>  The password to use for login
+  --pass=<pass>     The default password for an endpoint [default: ]
   -H HOST           The host of the onedatashare deployment [default: onedatashare.org]
   --credId          A string flag representing the  credential Id for adding removing or listing from an endpoint that has been added already
   --type            A string flag with the possible types: dropbox, gdrive, sftp, ftp, box, s3, http, vfs, scp
@@ -239,10 +240,10 @@ if __name__ == '__main__':
     elif args['logout']:
         logout()
     elif args['addRemote']:
-        credId = args['<user>'] + "@" + args['<host>']
+        credId = args['--user'] + "@" + args['<host>']
         if (args['--credentialId'] != None):
             credId = args['--credentialId']
-        addRemote(remoteHost=args['<host>'], remoteUser=args['<user>'], remotePassword=args['--pass'],
+        addRemote(remoteHost=args['<host>'], remoteUser=args['--user'], remotePassword=args['--pass'],
                   keyfile=args['--keyfile'], credId=credId, type=args['<type>'])
     elif args['lsRemote']:
         listRemote(args['<type>'])

@@ -19,8 +19,8 @@ class CredService:
         req = constants.ODS_PROTOCOL+host+constants.CRED_ACCOUNT_REGISTERV2
         reqFormated = req.format(type=type)
         cookies = dict(ATOKEN=atok)
-        print(secret)
         body = {'accountId':cred_id,'uri':uri,'username':username,'secret':secret}
+        print("Credential we are adding: ", body)
         requests.post(reqFormated, cookies=cookies,json=body)# Needs to be handled better for errors
 
     def get_CredentialODS(type:EndpointType,atok,hostname):
