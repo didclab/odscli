@@ -8,7 +8,7 @@ Usage:
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimize=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>]
+  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>]
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
   onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
   onedatashare.py --version
@@ -203,7 +203,7 @@ def mkdir(type, credId, dirToMake, path=""):
 
 # <source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify
 def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="", concurrency=1,
-             pipesize=10, parallel=0, chunksize=10000000, compress=False, encrypt=False, optimize="", overwrite=False,
+             pipesize=10, parallel=0, chunksize=10000000, compress=False, encrypt=False, optimizer="", overwrite=False,
              retry=5, verify=False):
     host, user, token = tokUt.readConfig()
     infoList = []
@@ -214,7 +214,7 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     source = Source(infoList=infoList, type=source_type, credentialId=source_credid,
                     parentInfo=Iteminfo(source_path, source_path, 0))
     destination = Destination(type=dest_type, credentialId=dest_credid, parentInto=Iteminfo(dest_path, dest_path, 0))
-    transferOptions = TransferOptions(concurrency, pipesize, chunksize, parallel, compress, encrypt, optimize,
+    transferOptions = TransferOptions(concurrency, pipesize, chunksize, parallel, compress, encrypt, optimizer,
                                       overwrite, retry, verify)
     transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
     print('Sending Transfer Request: ', transferRequest)
@@ -263,7 +263,7 @@ if __name__ == '__main__':
                  dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'], concurrency=args['--concurrency'],
                  chunksize=args['--chunksize'],
                  parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'],
-                 optimize=args['--optimize'], overwrite=args['--overwrite'], retry=args['--retry'],
+                 optimizer=args['--optimizer'], overwrite=args['--overwrite'], retry=args['--retry'],
                  verify=args['--verify'], pipesize=args['--pipesize'])
 
     elif args['query']:

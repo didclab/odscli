@@ -37,14 +37,14 @@ class Destination():
             sort_keys=True, indent=4)
 
 class TransferOptions():
-    def __init__(self,concurrencyThreadCount:int = 1,pipeSize:int = 1, chunkSize:int = 640000, parallelThreadCount:int = 1,compress:bool = False,encrypt:bool = False,optimize:str = "",overwrite:str = "",retry:int = 1,verify:bool = False):
+    def __init__(self,concurrencyThreadCount:int = 1,pipeSize:int = 1, chunkSize:int = 640000, parallelThreadCount:int = 1,compress:bool = False,encrypt:bool = False,optimizer:str = "",overwrite:str = "",retry:int = 1,verify:bool = False):
         self.concurrencyThreadCount = concurrencyThreadCount
         self.pipeSize = pipeSize
         self.chunkSize = chunkSize
         self.parallelThreadCount = parallelThreadCount
         self.compress = compress
         self.encrypt = encrypt
-        self.optimize = optimize
+        self.optimizer = optimizer
         self.overwrite = overwrite
         self.retry = retry
         self.verify = verify
