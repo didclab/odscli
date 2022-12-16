@@ -150,18 +150,22 @@ def deleteRemote(type, credId):
 
 def ls(type, credId, path):
     host, user, token = tokUt.readConfig()
-    jsonstr = endpoint.list(credId=credId, path=path, id=path, host=host, type=type,
-                            atok=token)  # Needs to be handled better for errors
-    jsonOb = json.loads(jsonstr)  # Needs to be handled better for errors
+    try:
+        jsonstr = endpoint.list(credId=credId, path=path, id=path, host=host, type=type,
+                                atok=token)  # Needs to be handled better for errors
+        jsonOb = json.loads(jsonstr)  # Needs to be handled better for errors
+    except(Exception):
+        return
     diction = jsonOb
     pad = len(str(diction.get("size")))
     padN = len(str(diction.get("name")))
     temp = diction.get("files")
-    for names in temp:
-        if len(str(names.get('size'))) > pad:
-            pad = len(str(names.get('size')))
-        if len(str(names.get('name'))) > padN:
-            padN = len(str(names.get('name')))
+    if temp:
+        for names in temp:
+            if len(str(names.get('size'))) > pad:
+                pad = len(str(names.get('size')))
+            if len(str(names.get('name'))) > padN:
+                padN = len(str(names.get('name')))
     print("Permissions\tSize\tTime\tDir\tName\tid\n")
     formating = "{}\t{:>" + str(pad) + "}\t{}\t{}\t.({})\t{}\n"
     print(formating.format(diction.get('permissions'), diction.get('size'), datetime.fromtimestamp(diction.get('time')),
