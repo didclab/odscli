@@ -2,6 +2,7 @@ import os
 import requests
 import configparser
 import sdk.constants as constants
+import json
 #Adds the hostname, username, password and user token for the ACTIVE onedatashare backend
 # odsConfig.ini
 #Python ConfigParser
@@ -33,6 +34,75 @@ def readConfig():
     return config['OneDataShare']['hostname'],config['OneDataShare']['username'],config['OneDataShare']['token']
 
 
+def writeTransferConfig(source_type, source_credid, file_list, dest_type, dest_credid, source_path, dest_path,
+                        concurrency, pipesize, parallel, chunksize, compress, encrypt, optimizer, overwrite,
+                        retry, verify):
+    config = configparser.ConfigParser()
+    # load existing config
+    if os.path.exists(config_absolute_path):
+        config.read(config_absolute_path)
+
+    # update with new data
+    config["Transfer"] = {
+        "source_type": str(source_type),
+        "source_credid": str(source_credid),
+        "file_list": file_list,
+        "dest_type": str(dest_type),
+        "dest_credid": str(dest_credid),
+        "source_path": str(source_path),
+        "dest_path": str(dest_path),
+        "concurrency": str(concurrency),
+        "pipesize": str(pipesize),
+        "parallel": str(parallel),
+        "chunksize": str(chunksize),
+        "compress": str(compress),
+        "encrypt": str(encrypt),
+        "optimizer": str(optimizer),
+        "overwrite": str(overwrite),
+        "retry": str(retry),
+        "verify": str(verify)
+    }
+
+    # write back to file
+    os.makedirs(config_path, exist_ok=True)
+    with open(config_absolute_path, 'w') as configfile:
+        try:
+            config.write(configfile)
+        except:
+            print("Error Writing Config")
+
+
+def readTransferConfig():
+    config = configparser.ConfigParser()
+    if os.path.exists(config_absolute_path):
+        config.read(config_absolute_path)
+        transfer_params = config['Transfer']
+        # use split to get a list of files
+        file_list = transfer_params.get('file_list', '').split()
+        return {
+            'source_type': transfer_params.get('source_type', ''),
+            'source_credid': transfer_params.get('source_credid', ''),
+            'file_list': file_list,
+            'dest_type': transfer_params.get('dest_type', ''),
+            'dest_credid': transfer_params.get('dest_credid', ''),
+            'source_path': transfer_params.get('source_path', ''),
+            'dest_path': transfer_params.get('dest_path', ''),
+            'concurrency': int(transfer_params.get('concurrency', 1)),
+            'pipesize': int(transfer_params.get('pipesize', 10)),
+            'parallel': int(transfer_params.get('parallel', 0)),
+            'chunksize': int(transfer_params.get('chunksize', 10000000)),
+            'compress': bool(transfer_params.get('compress', False)),
+            'encrypt': bool(transfer_params.get('encrypt', False)),
+            'optimizer': transfer_params.get('optimizer', None),
+            'overwrite': bool(transfer_params.get('overwrite', False)),
+            'retry': int(transfer_params.get('retry', 5)),
+            'verify': bool(transfer_params.get('verify', False)),
+        }
+    else:
+        return None
+
+
+
 def isValidUser(host:str,email:str)->bool:
     isValidURL = "http://"+host+constants.VALIDATE_EMAILV2
     body = {'email':email}
@@ -61,3 +131,4 @@ def login(host,user,password):
         return False,""
 def logout():
     writeConfig('None','None','None')
+
