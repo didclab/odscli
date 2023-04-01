@@ -8,7 +8,7 @@ Usage:
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>, --save=<SAVE>, --config=<CONFIG_FILE>]
+  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>, --save=<SAVE>]
   onedatashare.py transfer [--config=<CONFIG>]
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
   onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
@@ -22,7 +22,7 @@ Commands:
     ls              List operation on a server that has been added to onedatashare. This requires a credential Id and a type, the path is optional.
     rm              Remove operation on an added server. Requires a credential Id, type, and a path(either folder or file). If a directory is passed then it will recursively delete the directory
     mkdir           Creates a directory on an added server. This requires credential Id, type, and a path to create
-    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save, config   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
+    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save,   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     transfer        Submits a transfer job to onedatashare.org. Requires a config that reads data from configuration file. The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save, config   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     monitor         Monitors the given list of job ids. Which means it downloads and displays the data and consumes the terminal till all jobs are done. It defaults to using the last job id in case no job id is specified
     login           Executes the login with the required parameters, if that fails will attempt to use env variables ODS_CLI_USER, ODS_CLI_PWD.
@@ -209,7 +209,7 @@ def mkdir(type, credId, dirToMake, path=""):
 # <source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify
 def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="", concurrency=1,
              pipesize=10, parallel=0, chunksize=10000000, compress=False, encrypt=False, optimizer="", overwrite=False,
-             retry=5, verify=False, save=False):
+             retry=5, verify=False, save=None):
 
     host, user, token = tokUt.readConfig()
 
@@ -225,10 +225,10 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
                                       overwrite, retry, verify)
     transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
 
-    if save:
-        tokUt.writeTransferConfig(source_type, source_credid, file_list, dest_type, dest_credid, source_path, dest_path,
+    if save is not None:
+        tokUt.writeTransferConfig(user, source_type, source_credid, file_list, dest_type, dest_credid, source_path, dest_path,
                                   concurrency, pipesize, parallel, chunksize, compress, encrypt, optimizer, overwrite,
-                                  retry, verify)
+                                  retry, verify,save)
 
     print('Sending Transfer Request: ', transferRequest)
     r = Transfer.transfer(host, token, transferRequest)
@@ -238,9 +238,9 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     print(r.text)
 #
 
-def transfer_config():
+def transfer_config(config_name):
     host, user, token = tokUt.readConfig()
-    transfer_config = tokUt.readTransferConfig()
+    transfer_config = tokUt.readTransferConfig(user,config_name)
     print('Transfer Config:', transfer_config)
 
     # Create transfer request
@@ -319,8 +319,7 @@ if __name__ == '__main__':
         mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
         if args['--config']:
-            print("Hello")
-            transfer_config()
+            transfer_config(config_name = args['--config'])
         else:
             transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'],
                      source_path=args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'],
@@ -349,4 +348,3 @@ if __name__ == '__main__':
         delta_t = args['--delta_t']
         file_to_dump_times = args['--experiment_file']
         qg.monitor(job_id, int(timeparse(delta_t)), file_to_dump_times)
-
