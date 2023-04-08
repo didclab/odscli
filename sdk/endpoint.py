@@ -40,10 +40,12 @@ class Endpoint():
     def list(credId,host,type,atok, path="", id="") -> str:
         req = constants.ODS_PROTOCOL+host+constants.LISTV2
         reqForm = req.format(type=type)
+        print(reqForm)
         cookies = dict(ATOKEN=atok)
         body={'credId':credId,'path':path,'identifier':id}
         print(body)
         res = requests.get(reqForm,params=body,cookies=cookies)# Needs to be handled better for errors
+        print(res)
         return res.text
 
     def mkdir(credId, host, type, atok, folderToCreate, path="", id="") -> str:

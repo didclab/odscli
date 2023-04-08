@@ -3,7 +3,7 @@
 #ROUTES FOR PYTHON TO GRAB
 
 PORT = "8080"
-ODS_PROTOCOL="https://"
+ODS_PROTOCOL="http://"
 LISTV1 = "/api/{type}/ls"
 LISTV2 = "/api/{type}/ls"
 MKDIRV1 = "/api/{type}/mkdir"

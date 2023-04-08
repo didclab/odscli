@@ -140,32 +140,34 @@ def deleteRemote(type, credId):
 
 def ls(type, credId, path):
     host, user, token = tokUt.readConfig()
-    jsonstr = endpoint.list(credId=credId, path=path, id=path, host=host, type=type,
-                            atok=token)  # Needs to be handled better for errors
+    # jsonstr = endpoint.list(credId=credId, path=path, id=path, host=host, type=type, atok=token)  # Needs to be handled better for errors
+    jsonstr = endpoint.list(credId=credId, path=path, id=path, host="localhost:8080", type=type, atok=token)
     jsonOb = json.loads(jsonstr)  # Needs to be handled better for errors
     diction = jsonOb
     pad = len(str(diction.get("size")))
     padN = len(str(diction.get("name")))
     temp = diction.get("files")
-    for names in temp:
-        if len(str(names.get('size'))) > pad:
-            pad = len(str(names.get('size')))
-        if len(str(names.get('name'))) > padN:
-            padN = len(str(names.get('name')))
-    print("Permissions\tSize\tTime\tDir\tName\tid\n")
-    formating = "{}\t{:>" + str(pad) + "}\t{}\t{}\t.({})\t{}\n"
-    print(formating.format(diction.get('permissions'), diction.get('size'), datetime.fromtimestamp(diction.get('time')),
-                           diction.get('dir'), diction.get('name'), diction.get('id')))
-    diction = diction.get('files')
-    if args['--jsonprint']:
-        print(json.dumps(jsonOb))
+    if temp is not None:
+        for names in temp:
+            if len(str(names.get('size'))) > pad:
+                pad = len(str(names.get('size')))
+            if len(str(names.get('name'))) > padN:
+                padN = len(str(names.get('name')))
+        print("Permissions\tSize\tTime\tDir\tName\tid\n")
+        formating = "{}\t{:>" + str(pad) + "}\t{}\t{}\t.({})\t{}\n"
+        print(formating.format(diction.get('permissions'), diction.get('size'), datetime.fromtimestamp(diction.get('time')),
+                               diction.get('dir'), diction.get('name'), diction.get('id')))
+        diction = diction.get('files')
+        if args['--jsonprint']:
+            print(json.dumps(jsonOb))
+        else:
+            for names in diction:
+                formating = "{}\t{:>" + str(pad) + "}\t{}\t{}\t{:>" + str(padN) + "}\t{}\n"
+                print(
+                    formating.format(names.get('permissions'), names.get('size'), datetime.fromtimestamp(names.get('time')),
+                                     names.get('dir'), names.get('name'), names.get('id')))
     else:
-        for names in diction:
-            formating = "{}\t{:>" + str(pad) + "}\t{}\t{}\t{:>" + str(padN) + "}\t{}\n"
-            print(
-                formating.format(names.get('permissions'), names.get('size'), datetime.fromtimestamp(names.get('time')),
-                                 names.get('dir'), names.get('name'), names.get('id')))
-
+        print("Listed no files")
 
 def rm(type, credId, toDelete, path=""):
     if toDelete is None:

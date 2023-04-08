@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 from sdk.meta_query import MetaQueryAPI
@@ -126,10 +128,8 @@ class QueryGui:
                 job_batch_json = self.mq.query_job_id_cdb(job_id)
                 job_influx_json = self.mq.query_job_id_influx(job_id)
             elif start_date is not None and end_date is not None:
-                job_batch_json = self.mq.query_range_cdb(start_date_time=self.parse_time(start_date),
-                                                         end_date_time=self.parse_time(end_date))
-                job_influx_json = self.mq.query_range_influx(start_date=self.parse_time(start_date),
-                                                             end_date=self.parse_time(end_date))
+                job_batch_json = self.mq.query_range_cdb(start_date_time=self.parse_time(start_date),end_date_time=self.parse_time(end_date))
+                job_influx_json = self.mq.query_range_influx(start_date=self.parse_time(start_date),end_date=self.parse_time(end_date))
             elif all is True:
                 job_batch_json = self.mq.all_user_stats_cdb()
                 job_influx_json = self.mq.all_user_measurements_influx()
@@ -138,8 +138,7 @@ class QueryGui:
             if job_id is not None and int(job_id) > 0:
                 job_batch_json = self.mq.query_job_id_cdb(job_id)
             elif start_date is not None and end_date is not None:
-                job_batch_json = self.mq.query_range_cdb(start_date_time=self.parse_time(start_date),
-                                                         end_date_time=self.parse_time(end_date))
+                job_batch_json = self.mq.query_range_cdb(start_date_time=self.parse_time(start_date),end_date_time=self.parse_time(end_date))
             elif all is True:
                 job_batch_json = self.mq.all_user_stats_cdb()
         elif influx_only:
@@ -151,24 +150,32 @@ class QueryGui:
             elif all is True:
                 job_influx_json = self.mq.all_user_measurements_influx()
 
-        print("1. Complex/Complete data")
-        print("2. Simple data")
-        option = input("Select one of the above options regarding the data: ")
-        if option not in ["1", "2"]:
-            print("Invalid option")
-            return
-        print("Job Batch Data: ")
-        if option == "1":
-            print(job_batch_json)
-        elif option == "2":
-            self.log.print_data(job_batch_json)
-        print("Influx Measurements Data:")
-        if option == "1":
-            print(job_influx_json)
-        elif option == "2":
-            self.pretty_print_influx_data(job_influx_json)
-            if job_batch_json["status"] != "COMPLETED":
-                self.plot_graphs(self.influx_df)
+        job_batch_json = pprint.pformat(job_batch_json)
+        job_influx_json = pprint.pformat(job_influx_json)
+        print("Batch Data: ")
+        # pprint.pprint(job_batch_json)
+        print(job_batch_json)
+        print("Influx Data: ")
+        print(job_influx_json)
+        # pprint.pprint(job_influx_json)
+        # print("1. Complex/Complete data")
+        # print("2. Simple data")
+        # option = input("Select one of the above options regarding the data: ")
+        # if option not in ["1", "2"]:
+        #     print("Invalid option")
+        #     return
+        # print("Job Batch Data: ")
+        # if option == "1":
+        #     print(job_batch_json)
+        # elif option == "2":
+        #     self.log.print_data(job_batch_json)
+        # print("Influx Measurements Data:")
+        # if option == "1":
+        #     print(job_influx_json)
+        # elif option == "2":
+        #     self.pretty_print_influx_data(job_influx_json)
+        #     if job_batch_json["status"] != "COMPLETED":
+        #         self.plot_graphs(self.influx_df)
 
     def parse_time(self, time):
         if time is None:
