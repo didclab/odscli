@@ -8,10 +8,12 @@ Usage:
   onedatashare.py rmRemote (<credId> <type>)
   onedatashare.py lsRemote <type>
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>]
+  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>, --save=<SAVE>]
+  onedatashare.py transfer [--config=<CONFIG>]
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
   onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
   onedatashare.py --version
+
 
 Commands:
     addRemote       Adds a remote server to onedatashare. Currently the CLI does not support any OAuth endpoints. Please use onedatashare.org to add the OAuth services
@@ -20,8 +22,8 @@ Commands:
     ls              List operation on a server that has been added to onedatashare. This requires a credential Id and a type, the path is optional.
     rm              Remove operation on an added server. Requires a credential Id, type, and a path(either folder or file). If a directory is passed then it will recursively delete the directory
     mkdir           Creates a directory on an added server. This requires credential Id, type, and a path to create
-    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,
-    query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
+    transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save,   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
+    transfer        Submits a transfer job to onedatashare.org. Requires a config that reads data from configuration file. The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save, config   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     monitor         Monitors the given list of job ids. Which means it downloads and displays the data and consumes the terminal till all jobs are done. It defaults to using the last job id in case no job id is specified
     login           Executes the login with the required parameters, if that fails will attempt to use env variables ODS_CLI_USER, ODS_CLI_PWD.
 
@@ -40,12 +42,14 @@ Options:
   --pipesize=<PIPE_SIZE>        The amount of reads or writes to do Ex: when 1, read once write once. Ex when 5 read 5 times and write 5 times. [default: 10]
   --parallel=<PARALLEL>         The number of parallel threads to use for every concurrent connection [default: 1]
   --chunksize=<CHUNK_SIZE>      The number of bytes for every read operation default is 64MB [default: 64000000]
-  --compress=<COMPRESS>         A boolean flag that will enable compression. This currently only works for SCP, SFTP, FTP. [default: False]
+  --compress=<COMPRESS>         A boolean flag that will enable compression. This currently only  works for SCP, SFTP, FTP. [default: False]
   --encrypt=<ENCRPTY>           A boolean flag to enable encryption. Currently not supported [default: False]
   --optimize=<OPTIMIZE>         A string flag that allows the user to select which form of optimization to use. [default: False]
   --overwrite=<OVERWRITE>       A boolean flag that will overwrite files with the same path as found on the remote. Generally I would not use this. [default: False]
   --retry=<RETRY>               An integer that represents the number of retries for every single file. Generally I would keep this below 10. [default: 5]
   --verify=<VERIFY>             A boolean flag to flag the use of checksumming after every file or after the whole job. [default: False]
+  --save=<SAVE>                 Save the transfer configuration.
+  --config=<CONFIG>             Use configuration file to read transfer parameters
   --job_id=<JOB_ID>             A job id to query for and all data that occurred during that job.
   --start_date=<START_DATE>     If used alone then the query will get all jobs launched at said time.
   --end_date=<END_DATE>         Used to determine the second point on the line to query all jobs between start and end.
@@ -55,6 +59,7 @@ Options:
   --all     Will download all of the respective data associated with the measurement, and batch flags. [default: False]
   --list_job_ids    Will list all of the jobIds associated to the user [default: False]
   --experiment_file=<EXP_FILE>      The file to dump all timings of a running job
+
 """
 
 from docopt import docopt
@@ -204,8 +209,10 @@ def mkdir(type, credId, dirToMake, path=""):
 # <source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify
 def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="", concurrency=1,
              pipesize=10, parallel=0, chunksize=10000000, compress=False, encrypt=False, optimizer="", overwrite=False,
-             retry=5, verify=False):
+             retry=5, verify=False, save=None):
+
     host, user, token = tokUt.readConfig()
+
     infoList = []
     for f in file_list:
         if len(f) > 0:
@@ -217,11 +224,65 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     transferOptions = TransferOptions(concurrency, pipesize, chunksize, parallel, compress, encrypt, optimizer,
                                       overwrite, retry, verify)
     transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
+
+    if save is not None:
+        tokUt.writeTransferConfig(user, source_type, source_credid, file_list, dest_type, dest_credid, source_path, dest_path,
+                                  concurrency, pipesize, parallel, chunksize, compress, encrypt, optimizer, overwrite,
+                                  retry, verify,save)
+
+    print('Sending Transfer Request: ', transferRequest)
+    r = Transfer.transfer(host, token, transferRequest)
+
+
+    print("status code: " + str(r.status_code))
+    print(r.text)
+#
+
+def transfer_config(config_name):
+    host, user, token = tokUt.readConfig()
+    transfer_config = tokUt.readTransferConfig(user,config_name)
+    print('Transfer Config:', transfer_config)
+
+    # Create transfer request
+    # transfer_request = TransferRequest()
+    # Create transfer request
+    source_type = transfer_config.get('source_type', '')
+    source_credid = transfer_config.get('source_credid', '')
+    source_path = transfer_config.get('source_path', '')
+    dest_type = transfer_config.get('dest_type', '')
+    dest_credid = transfer_config.get('dest_credid', '')
+    dest_path = transfer_config.get('dest_path', '')
+    file_list = transfer_config.get('file_list', [])
+    concurrency = int(transfer_config.get('concurrency', 1))
+    pipesize = int(transfer_config.get('pipesize', 10))
+    parallel = int(transfer_config.get('parallel', 0))
+    chunksize = int(transfer_config.get('chunksize', 10000000))
+    compress = bool(transfer_config.get('compress', False))
+    encrypt = bool(transfer_config.get('encrypt', False))
+    optimizer = transfer_config.get('optimizer', None)
+    overwrite = bool(transfer_config.get('overwrite', False))
+    retry = int(transfer_config.get('retry', 5))
+    verify = bool(transfer_config.get('verify', False))
+
+    infoList = []
+    for f in file_list:
+        if len(f) > 0:
+            infoList.append(Iteminfo(path=f, id=f, size=0, chunk_size=chunksize))
+
+    source = Source(infoList=infoList, type=source_type, credentialId=source_credid,
+                    parentInfo=Iteminfo(source_path, source_path, 0))
+    destination = Destination(type=dest_type, credentialId=dest_credid, parentInto=Iteminfo(dest_path, dest_path, 0))
+    transferOptions = TransferOptions(concurrency, pipesize, chunksize, parallel, compress, encrypt, optimizer,
+                                      overwrite, retry, verify)
+    transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
+
+
     print('Sending Transfer Request: ', transferRequest)
     r = Transfer.transfer(host, token, transferRequest)
 
     print("status code: " + str(r.status_code))
     print(r.text)
+
 
 
 def transfernode_direct(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="",
@@ -257,14 +318,17 @@ if __name__ == '__main__':
     elif args['mkdir']:
         mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
-        # onedatashare.py transfer [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify]
-        transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'],
-                 source_path=args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'],
-                 dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'], concurrency=args['--concurrency'],
-                 chunksize=args['--chunksize'],
-                 parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'],
-                 optimizer=args['--optimizer'], overwrite=args['--overwrite'], retry=args['--retry'],
-                 verify=args['--verify'], pipesize=args['--pipesize'])
+        if args['--config']:
+            transfer_config(config_name = args['--config'])
+        else:
+            transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'],
+                     source_path=args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'],
+                     dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'],
+                     concurrency=args['--concurrency'],
+                     chunksize=args['--chunksize'],
+                     parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'],
+                     optimizer=args['--optimizer'], overwrite=args['--overwrite'], retry=args['--retry'],
+                     verify=args['--verify'], pipesize=args['--pipesize'], save=args['--save'])
 
     elif args['query']:
         qg = QueryGui()
