@@ -55,6 +55,12 @@ class QueryGui:
         if job_id is None:
             # get the last job_id listed from the query
             job_ids = self.mq.query_all_jobs_ids()
+
+            # added condition to check if there is any job to monitor or not - jasleen
+            if not job_ids:
+                print('No job IDs found to monitor.')
+                return
+
             job_id = job_ids[-1]  # get most recent jobId
 
         self.job_start(job_id, delta_t)  # check if job has started if so print before loop
@@ -87,6 +93,9 @@ class QueryGui:
 
             if self.check_if_job_done(job_batch_cdb['status']):
                 print('\n', job_id, ' has final status of ', job_batch_cdb['status'])
+                # If job fails, then it should not run finished_job_stdout() method because that gives division by zero error-jasleen
+                if job_batch_cdb['status'] == "FAILED":
+                    return
                 self.finished_job_stdout(batch_job_cdb=job_batch_cdb, output_file=output_file, job_id=job_id)
                 return
 

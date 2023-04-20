@@ -24,6 +24,7 @@ Commands:
     mkdir           Creates a directory on an added server. This requires credential Id, type, and a path to create
     transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save,   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     transfer        Submits a transfer job to onedatashare.org. Requires a config that reads data from configuration file. The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save, config   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
+    query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     monitor         Monitors the given list of job ids. Which means it downloads and displays the data and consumes the terminal till all jobs are done. It defaults to using the last job id in case no job id is specified
     login           Executes the login with the required parameters, if that fails will attempt to use env variables ODS_CLI_USER, ODS_CLI_PWD.
 
@@ -238,6 +239,7 @@ def transfer(source_type, source_credid, file_list, dest_type, dest_credid, sour
     print(r.text)
 #
 
+# new method to run transfer if config is passed - jasleen
 def transfer_config(config_name):
     host, user, token = tokUt.readConfig()
     transfer_config = tokUt.readTransferConfig(user,config_name)
