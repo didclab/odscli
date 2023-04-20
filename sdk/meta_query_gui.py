@@ -186,69 +186,6 @@ class QueryGui:
             print('\tTotal Time for job to complete: ', totalSeconds)
             print('\tTotal Job throughput: ', job_size / totalSeconds)
 
-    # def pretty_print_batch_job(self, batch_job_json):
-    #     # job batch information printing
-    #     batch_job_cols_select = ['id', 'status', 'startTime', 'endTime', 'exitCode', 'exitMessage', 'lastUpdated']
-    #     df = pd.json_normalize(batch_job_json)
-    #     self.job_batch_df = self.transform_start_end_last(df)
-    #     for batch_col in batch_job_cols_select:
-    #         if batch_col not in self.job_batch_df:
-    #             self.job_batch_df[batch_col] = np.nan
-    #     print(self.job_batch_df[batch_job_cols_select].to_string())
-    #
-    #     # job param printing
-    #     job_params = batch_job_json['jobParameters']
-    #     if 'jobSize' not in job_params:
-    #         job_params['jobSize'] = 0
-    #     self.job_size = job_size = int(job_params['jobSize'])
-    #
-    #     # step information printing
-    #     files_df = pd.json_normalize(batch_job_json['batchSteps'])
-    #     self.files_df = self.transform_start_end_last(files_df)
-    #
-    #     files_cols_select = ['id', 'step_name', 'startTime', 'status', 'startTime', 'endTime']
-    #     for col in files_cols_select:
-    #         if col not in self.files_df:
-    #             self.files_df[col] = np.nan
-    #
-    #     print('Total Job Size:', job_size)
-    #     print("The Files in the transfer job request:\n")
-    #     print(self.files_df[files_cols_select].to_string())
-
-    # Used to keep track of total sent and the throughput achieved by summing the bytes sent and total time from startime to lastUpdated.
-    # This is another interpretation of throughput. Then we can print the final throughput at the end of the job.
-    # def pretty_print_influx_data(self, measurement_data_list):
-    #     influx_cols_select = ['throughput', 'concurrency', 'parallelism', 'dataBytesSent',
-    #                           'pipelining', 'rtt', 'dropin', 'dropout']
-    #     influx_df = pd.DataFrame.from_records(measurement_data_list)
-    #     for col in influx_cols_select:
-    #         if col not in influx_df:
-    #             influx_df[col] = np.nan
-    #     if len(measurement_data_list) > 0:
-    #         print('Job Id: ', measurement_data_list[0]['jobId'])
-    #     # print(influx_df[influx_cols_select].to_string())
-    #
-    #     if self.influx_df.empty:
-    #         self.influx_df = influx_df
-    #     else:
-    #         self.influx_df = pd.concat([self.influx_df, influx_df])
-    #         self.influx_df = self.influx_df.drop_duplicates().reset_index(drop=True)
-    #         self.influx_df = self.influx_df.dropna(thresh=2)
-    #     bytes_sent_so_far = self.influx_df['dataBytesSent'].sum()
-    #     remaining_bytes = self.job_size - bytes_sent_so_far
-    #     avg_throughput = self.influx_df['throughput'].mean()
-    #     remainingTime = 0
-    #     if remaining_bytes == 0:
-    #         print('Final influx call gives avg throughput unparsed: ', avg_throughput)
-    #     else:
-    #         remainingTime = remaining_bytes / avg_throughput
-    #
-    #     print("Job Size: ", self.job_size, " Bytes sent so far ", bytes_sent_so_far, " Bytes Remaining: ",
-    #           remaining_bytes)
-    #     print('Average throughput unparsed: ', avg_throughput, 'bytes/second', 'Avg Thrpt: ', avg_throughput * 8,
-    #           ' bits/second', ' Parsed throughput: ', ((avg_throughput / 1000000) * 8), 'Mbps')
-    #     print("Time remaining: ", remainingTime)
-
     def transform_start_end_last(self, df):
         if 'startTime' in df.columns:
             df['startTime'] = pd.to_datetime(df['startTime'])
