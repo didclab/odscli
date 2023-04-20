@@ -10,7 +10,8 @@ Usage:
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>, --save=<SAVE>]
   onedatashare.py transfer [--config=<CONFIG>]
-  onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
+  onedatashare.py query [--job_id=<JOB_ID> |--start_date=<START_DATE> | (--start_date=<START_DATE> --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY> ] [--data_type=<DATA_TYPE>]
+  onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
   onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
   onedatashare.py --version
 
@@ -24,7 +25,7 @@ Commands:
     mkdir           Creates a directory on an added server. This requires credential Id, type, and a path to create
     transfer        Submits a transfer job to onedatashare.org. Requires a Source(credentialID, type, source path, list of files), Destination(type, credential ID, destination path). The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save,   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
     transfer        Submits a transfer job to onedatashare.org. Requires a config that reads data from configuration file. The Transfer options are the following: compress, optimize(inprogress), encrypt(in-progress), overwrite(in-progress), retry, verify, concurrencyThreadCount(server and protocol restrictions apply), parallelThreadCount(not supported on protocols that dont support seek()), pipeSize, chunkSize,save, config   query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
-    query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id at least.
+    query           Queries onedatashare for the metrics of a given job that has been submitted. Requires a job id and option at least.
     monitor         Monitors the given list of job ids. Which means it downloads and displays the data and consumes the terminal till all jobs are done. It defaults to using the last job id in case no job id is specified
     login           Executes the login with the required parameters, if that fails will attempt to use env variables ODS_CLI_USER, ODS_CLI_PWD.
 
@@ -52,6 +53,7 @@ Options:
   --save=<SAVE>                 Save the transfer configuration.
   --config=<CONFIG>             Use configuration file to read transfer parameters
   --job_id=<JOB_ID>             A job id to query for and all data that occurred during that job.
+  --data_type=<DATA_TYPE>       Type of data  could be complex or simple on how you want data to be presented.
   --start_date=<START_DATE>     If used alone then the query will get all jobs launched at said time.
   --end_date=<END_DATE>         Used to determine the second point on the line to query all jobs between start and end.
   --batch_job_only=<BATCH_JOB_ONLY>     A flag that tells the cli to disable querying for job parameter information [default: True]
@@ -341,9 +343,10 @@ if __name__ == '__main__':
         measurement_only = args['--measurement_only']
         all_jobs = bool(args['--all'])
         list_job_ids = bool(args['--list_job_ids'])
+        data_type = args['--data_type']
         qg.get_data(job_id=job_id, end_date=end_date, start_date=start_date,
                     influx_only=bool(measurement_only), cdb_only=bool(batch_job_only), all=all_jobs,
-                    list_job_ids=list_job_ids)
+                    list_job_ids=list_job_ids, data_type=data_type)
     elif args['monitor']:
         qg = QueryGui()
         job_id = args['--job_id']
