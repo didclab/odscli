@@ -23,7 +23,7 @@ class MetaQueryAPI:
         self.host = host
         self.user = user
         self.token = token
-        self.monitoring_ip = os.getenv("MONITORING_HOST", "localhost:8084")
+        self.monitoring_ip = os.getenv("MONITORING_HOST", "metdatalb-1298245410.us-east-2.elb.amazonaws.com")
 
     def query_job_id_cdb(self, job_id):
         param = {"jobId": job_id}
