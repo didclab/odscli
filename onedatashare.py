@@ -11,7 +11,7 @@ Usage:
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>, --save=<SAVE>]
   onedatashare.py transfer [--config=<CONFIG>]
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
-  onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE>]
+  onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE> --monitor_direct=<MONITOR_DIRECT>]
   onedatashare.py --version
 
 
@@ -59,6 +59,7 @@ Options:
   --all                         Will download all of the respective data associated with the measurement, and batch flags. [default: False]
   --list_job_ids                Will list all of the jobIds associated to the user [default: False]
   --experiment_file=<EXP_FILE>  The file to dump all timings of a running job
+  --monitor_direct=<MONITOR_DIRECT> The Transfer Service ip address to monitor JobMetadata from, Influx is through OneDataShare.org
   monitoring interface can be
 
 """
@@ -339,5 +340,13 @@ if __name__ == '__main__':
         job_id = args['--job_id']
         delta_t = args['--delta_t']
         file_to_dump_times = args['--experiment_file']
-        transfer_url = None
-        qg.monitor(job_id, int(timeparse(delta_t)), file_to_dump_times)
+        monitor_direct = bool(args['--monitor_direct'])
+        if monitor_direct:
+            transfer_url = os.getenv('TRANSFER_SERVICE_URL')
+            if transfer_url is None:
+                print("Please set the env variable TRANSFER_SERVICE_URL of the transfer-service")
+            else:
+                print("Directly monitoring job on: ", transfer_url)
+                qg.monitor_direct(job_id, int(timeparse(delta_t)), file_to_dump_times)
+        else:
+            qg.monitor(job_id, int(timeparse(delta_t)), file_to_dump_times)

@@ -26,6 +26,49 @@ class QueryGui:
         self.job_size = 0
         self.log = Log()
 
+    def monitor_direct(self, job_id, delta_t, output_file):
+        transfer_url = os.getenv('TRANSFER_SERVICE_URL')
+        max_retry = 5
+        if job_id is None:
+            # get the last job_id listed from the query
+            job_ids = self.mq.query_all_jobs_ids()
+            job_id = job_ids[-1]  # get most recent jobId
+        print('Monitoring jobId', job_id, "every:", delta_t, 'sec')
+        if output_file is not None:
+            print("Saving contents to: ", output_file)
+
+        local_retry = 0
+        end_monitor = False
+        while end_monitor is False and local_retry < max_retry:
+            job_data_influx = self.mq.query_job_id_influx(job_id=job_id)
+            job_batch_cdb = self.mq.query_transferservice_direct(job_id, transfer_url)
+            if 'endTime' not in job_batch_cdb:
+                job_batch_cdb['endTime'] = None
+
+            if len(job_batch_cdb) > 1:
+                self.log.visualize_job(job_batch_cdb)
+                self.log.visualize_steps(job_batch_cdb)
+            else:
+                print("Failed to get Job MetaData retry:", local_retry, " max retry:", max_retry)
+                local_retry += 1
+                time.sleep(delta_t)
+                continue
+
+            if len(job_data_influx) < 1:
+                print('Influx has no measurements of jobId: ', job_id)
+                local_retry += 1
+            else:
+                self.log.visualize_influx_data(job_data_influx)
+
+            if Log.check_if_job_done(job_batch_cdb['status']):
+                print('\n JobId: ', job_id, ' has final status of ', job_batch_cdb['status'])
+                self.finished_job_stdout(batch_job_cdb=job_batch_cdb, output_file=output_file, job_id=job_id)
+                return
+
+            if local_retry == 9:
+                print('Failed to monitor transfer ')
+            time.sleep(delta_t)
+
     def monitor(self, job_id, delta_t, output_file):
         max_retry = 5
         if job_id is None:
@@ -44,8 +87,8 @@ class QueryGui:
         end_monitor = False
         while end_monitor is False and local_retry < max_retry:
             resp = self.mq.monitor(job_id=job_id)
+            job_data_influx = self.mq.query_job_id_influx(job_id=job_id)
             job_batch_cdb = resp.json()['jobData']
-            job_data_influx = resp.json()['measurementData']
             if 'endTime' not in job_batch_cdb:
                 job_batch_cdb['endTime'] = None
 
