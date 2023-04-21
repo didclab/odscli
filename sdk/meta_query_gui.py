@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import pandas as pd
 from sdk.meta_query import MetaQueryAPI
 from tabulate import tabulate
@@ -9,10 +8,6 @@ import time
 from pathlib import Path
 import csv
 from sdk.log import Log
-import plotext as plt
-
-# STARTING, STARTED, STOPPING,
-# STOPPED, FAILED, COMPLETED, ABANDONED
 
 COMPLETED = "COMPLETED"
 csv_headers = ['jobId', 'jobSize (MB)', 'totalSeconds', 'throughput (Mbps)', 'concurrency', 'parallelism', 'pipelining',
@@ -194,4 +189,3 @@ class QueryGui:
         if 'lastUpdated' in df.columns:
             df['lastUpdated'] = pd.to_datetime(df['lastUpdated'])
         return df
-
