@@ -31,7 +31,7 @@ class QueryGui:
         max_retry = 5
         if job_id is None:
             # get the last job_id listed from the query
-            job_ids = self.mq.query_all_jobs_ids()
+            job_ids = self.mq.query_job_ids_direct(transfer_url)
             job_id = job_ids[-1]  # get most recent jobId
         print('Monitoring jobId', job_id, "every:", delta_t, 'sec')
         if output_file is not None:

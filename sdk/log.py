@@ -7,7 +7,6 @@ class Log:
 
     def visualize_job(self, batch_job_json):
         job_params = batch_job_json['jobParameters']
-        print(batch_job_json['jobParameters'].keys())
         print("Job MetaData: ")
         job_size = int(batch_job_json['jobParameters']['jobSize'])
         job_size_gb = job_size / 1000000000  # convert to GB

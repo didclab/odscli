@@ -47,6 +47,11 @@ class MetaQueryAPI:
         r = requests.get(hostStr, headers=headers, cookies=cookies)  # Needs to be handled better for errors
         return r.json()
 
+    def query_job_ids_direct(self, transfer_url):
+        #http://localhost:8092
+        hostStr = transfer_url + "/api/v1/job/ids"
+        r = requests.get(hostStr)
+        return r.json()
     def query_job_id_influx(self, job_id):
         # hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + MEASUREMENTS + JOB
         hostStr = "http://"+self.monitoring_ip+"/api/v1/meta/stats/influx/job"
