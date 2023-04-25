@@ -71,8 +71,11 @@ class Log:
         print(file_steps_df)
 
     def time_difference(self, start_time, end_time):
-        start_date_time_obj = datetime.fromisoformat(str(start_time).split("+")[0])
-        end_date_time_obj = datetime.fromisoformat(str(end_time).split("+")[0])
+        print(start_time, end_time)
+        start_date_time_obj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        end_date_time_obj = datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        # start_date_time_obj = datetime.fromisoformat(str(start_time).split("+")[0])
+        # end_date_time_obj = datetime.fromisoformat(str(end_time).split("+")[0])
         tdelta = end_date_time_obj - start_date_time_obj
         return tdelta.total_seconds()
 
