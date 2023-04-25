@@ -35,38 +35,39 @@ class Log:
         print("File MetaData: ")
         file_steps_df = pd.DataFrame.from_records(batch_job_json['batchSteps'])
         job_params = batch_job_json['jobParameters']
-        columns_to_select = ['step_name', 'jobInstanceId', 'startTime', 'endTime', 'status', 'exitMessage']
-        if 'endTime' not in file_steps_df:
-            file_steps_df['endTime'] = None
-        file_steps_df = file_steps_df[columns_to_select]
-        file_size_list_in_order = []
-        # Construct file size in df from job params
-        for step_name in file_steps_df['step_name']:
-            file_info = str(job_params[step_name])
-            size_str = file_info.split(",")[2]
-            file_size = size_str.split("=")[1]
-            file_size_list_in_order.append(int(file_size))
-        file_steps_df.insert(loc=2, column="fileSize", value=file_size_list_in_order)
+        if len(file_steps_df) > 1:
+            columns_to_select = ['step_name', 'jobInstanceId', 'startTime', 'endTime', 'status', 'exitMessage']
+            if 'endTime' not in file_steps_df:
+                file_steps_df['endTime'] = None
+            file_steps_df = file_steps_df[columns_to_select]
+            file_size_list_in_order = []
+            # Construct file size in df from job params
+            for step_name in file_steps_df['step_name']:
+                file_info = str(job_params[step_name])
+                size_str = file_info.split(",")[2]
+                file_size = size_str.split("=")[1]
+                file_size_list_in_order.append(int(file_size))
+            file_steps_df.insert(loc=2, column="fileSize", value=file_size_list_in_order)
 
         # compute throughput per step
-        throughput_list_in_order = []
-        for idx, row in file_steps_df.iterrows():
-            file_size = row['fileSize']
-            file_size_mb = 0.000008 * file_size
-            start_time = row['startTime']
-            if 'endTime' not in row:
-                row['endTime'] = None
-            end_time = row['endTime']
+            throughput_list_in_order = []
+            for idx, row in file_steps_df.iterrows():
+                file_size = row['fileSize']
+                file_size_mb = 0.000008 * file_size
+                start_time = row['startTime']
+                if 'endTime' not in row:
+                    row['endTime'] = None
+                end_time = row['endTime']
 
-            if Log.check_if_job_done(row['status']):
-                seconds = self.time_difference(start_time, end_time)
-                milliseconds = seconds * 1000  # this gives milliseconds
-                throughput = (file_size_mb / milliseconds) * 1000
+                if Log.check_if_job_done(row['status']):
+                    seconds = self.time_difference(start_time, end_time)
+                    milliseconds = seconds * 1000  # this gives milliseconds
+                    throughput = (file_size_mb / milliseconds) * 1000
 
-            else:
-                throughput = 0.0
-            throughput_list_in_order.append(throughput)
-        file_steps_df.insert(loc=2, column="Mbps", value=throughput_list_in_order)
+                else:
+                    throughput = 0.0
+                throughput_list_in_order.append(throughput)
+            file_steps_df.insert(loc=2, column="Mbps", value=throughput_list_in_order)
         print(file_steps_df)
 
     def time_difference(self, start_time, end_time):
