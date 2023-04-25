@@ -32,6 +32,9 @@ class QueryGui:
         if job_id is None:
             # get the last job_id listed from the query
             job_ids = self.mq.query_job_ids_direct(transfer_url)
+            if len(job_ids) < 1:
+                print("Found no jobIds on: ", transfer_url)
+                return
             job_id = job_ids[-1]  # get most recent jobId
         print('Monitoring jobId', job_id, "every:", delta_t, 'sec')
         if output_file is not None:
