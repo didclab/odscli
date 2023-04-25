@@ -72,8 +72,14 @@ class Log:
 
     def time_difference(self, start_time, end_time):
         print(start_time, end_time)
-        start_date_time_obj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f%z")
-        end_date_time_obj = datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        try:
+            start_date_time_obj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        except ValueError:
+            start_date_time_obj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z")
+        try:
+            end_date_time_obj = datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        except ValueError:
+            end_date_time_obj = datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%z")
         # start_date_time_obj = datetime.fromisoformat(str(start_time).split("+")[0])
         # end_date_time_obj = datetime.fromisoformat(str(end_time).split("+")[0])
         tdelta = end_date_time_obj - start_date_time_obj
