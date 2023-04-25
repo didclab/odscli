@@ -43,7 +43,7 @@ class QueryGui:
         local_retry = 0
         end_monitor = False
         while end_monitor is False and local_retry < max_retry:
-            job_data_influx = []#self.mq.query_job_id_influx(job_id=job_id)
+            job_data_influx = []  # self.mq.query_job_id_influx(job_id=job_id)
             job_batch_cdb = self.mq.query_transferservice_direct(job_id, transfer_url)
             if 'endTime' not in job_batch_cdb:
                 job_batch_cdb['endTime'] = None
@@ -220,11 +220,10 @@ class QueryGui:
                 csvwriter = csv.writer(f, lineterminator="\n")
                 csvwriter.writerow(csv_data)
 
-        else:
-            print('JobId: ', job_id)
-            print('\tJob size in Megabits: ', job_size)
-            print('\tTotal Time for job to complete: ', totalSeconds)
-            print('\tTotal Job throughput: ', job_size / totalSeconds)
+        print('JobId: ', job_id)
+        print('\tJob size in Megabits: ', job_size)
+        print('\tTotal Time for job to complete: ', totalSeconds)
+        print('\tTotal Job throughput: ', job_size / totalSeconds)
 
     def transform_start_end_last(self, df):
         if 'startTime' in df.columns:
