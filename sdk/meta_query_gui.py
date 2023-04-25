@@ -182,7 +182,7 @@ class QueryGui:
         if isinstance(time, datetime):
             return time
         print('User input: ', time)
-        date_time_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M")
+        date_time_obj = datetime.strptime(time, "'%Y-%m-%dT%H:%M:%SZ'")
         print('datetime obj: ', date_time_obj)
         res = date_time_obj.utcnow().isoformat()
         print('datetime obj w/o +:', res)
@@ -203,8 +203,7 @@ class QueryGui:
         destCredType = batch_job_cdb['jobParameters']['destCredentialType']
         csv_headers = ['jobId', 'jobSizeMb', 'totalSeconds', 'throughputMbps', 'concurrency', 'parallelism',
                        'pipelining', 'sourceType', 'destType']
-        totalSeconds = pd.Timedelta(
-            self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
+        totalSeconds = pd.Timedelta(self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
         thrpt = job_size / totalSeconds
         if output_file is not None:
             output_path = Path(output_file)
