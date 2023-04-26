@@ -201,9 +201,10 @@ class QueryGui:
         pipelining = batch_job_cdb['jobParameters']['pipelining']
         sourceCredType = batch_job_cdb['jobParameters']['sourceCredentialType']
         destCredType = batch_job_cdb['jobParameters']['destCredentialType']
-        csv_headers = ['jobId', 'jobSizeMb', 'totalSeconds', 'throughputMbps', 'concurrency', 'parallelism',
-                       'pipelining', 'sourceType', 'destType']
+        csv_headers = ['throughputMbps', 'chunkSize', 'concurrency', 'parallelism', 'pipelining', 'totalSeconds', 'jobSizeMb', 'sourceType', 'destType', 'jobId']
+        #thrpt, chunkSize, concurrency, parallelism, pipelining, sourceCredType,destCredType, job_id, job_size, totalSeconds
         totalSeconds = pd.Timedelta(self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
+        chunkSize = batch_job_cdb['jobParameters']['chunkSize']
         thrpt = job_size / totalSeconds
         if output_file is not None:
             output_path = Path(output_file)
@@ -214,8 +215,7 @@ class QueryGui:
                 with open(abs_path, 'a+') as f:
                     csvwriter = csv.writer(f, lineterminator="\n")
                     csvwriter.writerow(csv_headers)
-            csv_data = [job_id, job_size, totalSeconds, thrpt, concurrency, parallelism, pipelining, sourceCredType,
-                        destCredType]
+            csv_data = [thrpt, chunkSize, concurrency, parallelism, pipelining, totalSeconds, job_size, sourceCredType,destCredType, job_id]
             with open(abs_path, "a+") as f:
                 csvwriter = csv.writer(f, lineterminator="\n")
                 csvwriter.writerow(csv_data)
