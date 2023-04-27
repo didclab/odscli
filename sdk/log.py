@@ -1,88 +1,127 @@
 import pandas as pd
 from datetime import datetime
 import plotext as plt
+from pathlib import Path
+import csv
 
 class Log:
-    def print_data(self, data):
-        output = {}
-        data_cols = ["id", "createTime", "startTime", "endTime"]
-        if not data:
-            print("\t None")
-        for col in data_cols:
-            if col in data:
-                output[col] = data[col]
-        if "batchSteps" in data:
-            batchSteps_cols = ["step_name", "status"]
-            batchSteps = {}
-            for step in data["batchSteps"]:
-                batchstep_id = {}
-                id = step["id"]
-                for col in batchSteps_cols:
-                    if col in step:
-                        batchstep_id[col] = step[col]
-                if step[col] != "COMPLETED":
-                    if "exitMessage" in step and step["exitMessage"]:
-                        batchstep_id["exitMessage"] = step["batchstep_id"]
-                batchstep_id["startTime"] = step["startTime"]
-                batchstep_id["endTime"] = step["endTime"]
-                batchstep_id["timeTaken"] = self.time_difference(step["startTime"], step["endTime"])
-                batchSteps[id] = batchstep_id
-            output["batchSteps"] = batchSteps
-        if "jobParameters" in data:
-            jobParameters = data["jobParameters"]
-            jobParameters_col = ["ownerId", "size", "destBasePath", "sourceBasePath", "sourceCredentialType", "time", "fileSizeAvg"]
-            for col in jobParameters_col:
-                if col in jobParameters and jobParameters[col]:
-                    output[col] = jobParameters[col]
-        if "status" in data:
-            output["status"] = data["status"]
-            if data["status"] == "FAILED":
-                output["exitCode"] = data["exitCode"]
-            if data["exitMessage"]:
-                output["exitMessage"] = data["exitMessage"]
-        for key, value in output.items():
-            if key == "batchSteps":
-                for id, step_value in value.items():
-                    print("\t ID: ", id)
-                    for col, id_value in step_value.items():
-                        print("\t\t", col, ": ", id_value)
-            else:
-                print("\t", key, ": ", value)
 
-        if data["status"] == "COMPLETED":
-            self.plot_graphs(data["jobParameters"], batchSteps)
+    def visualize_job(self, batch_job_json, output_file=None):
+        job_params = batch_job_json['jobParameters']
+        print("Job MetaData: ")
+        job_size = int(batch_job_json['jobParameters']['jobSize'])
+        job_size_gb = job_size / 1000000000  # convert to GB
+        job_df = pd.DataFrame(columns=['jobId', 'jobSizeGb', 'job_seconds', 'startTime', 'endTime', "Mbps"])
+        job_seconds = 0
+        throughput = 0
+        if 'sourceCredentialType' in job_params and 'destCredentialType' in job_params:
+            print("SourceType: ", job_params['sourceCredentialType'], "----->", " DestinationType:", job_params['destCredentialType'], "\n")
+
+        if 'concurrency' in job_params and 'pipelining' in job_params and 'parallelism' in job_params and 'chunkSize' in job_params:
+            print("(Concurrency,Parallelism, Pipelining, ChunkSize) (", job_params['concurrency'], job_params['parallelism'], job_params["pipelining"], job_params['chunkSize'], ")")
+
+        if 'startTime' in batch_job_json and 'endTime' in batch_job_json:
+            if batch_job_json['endTime'] is not None:
+                job_seconds = self.time_difference(batch_job_json['startTime'], batch_job_json['endTime'])
+                job_size_mb = job_size / 1000000
+                milliseconds = job_seconds * 1000  # this gives milliseconds
+                throughput = (job_size_mb / milliseconds) * 1000
+            one_row = [batch_job_json['id'], job_size_gb, job_seconds, batch_job_json['startTime'],
+                       batch_job_json['endTime'], throughput]
+            job_df.loc[len(job_df.index)] = one_row
+        print(job_df)
+        print("\n")
+        if output_file is not None:
+            output_file +='.csv'
+            job_df.to_csv(output_file, index=False)
+            print("Output saved to", output_file)
+
+
+
+    def visualize_steps(self, batch_job_json, output_file=None):
+        print("File MetaData: ")
+        file_steps_df = pd.DataFrame.from_records(batch_job_json['batchSteps'])
+        job_params = batch_job_json['jobParameters']
+        if len(file_steps_df) > 1:
+            columns_to_select = ['step_name', 'jobInstanceId', 'startTime', 'endTime', 'status', 'exitMessage']
+            if 'endTime' not in file_steps_df:
+                file_steps_df['endTime'] = None
+            file_steps_df = file_steps_df[columns_to_select]
+            file_size_list_in_order = []
+            # Construct file size in df from job params
+            for step_name in file_steps_df['step_name']:
+                file_info = str(job_params[step_name])
+                size_str = file_info.split(",")[2]
+                file_size = size_str.split("=")[1]
+                file_size_list_in_order.append(int(file_size))
+            file_steps_df.insert(loc=2, column="fileSize", value=file_size_list_in_order)
+
+        # compute throughput per step
+            throughput_list_in_order = []
+            for idx, row in file_steps_df.iterrows():
+                file_size = row['fileSize']
+                file_size_mb = 0.000008 * file_size
+                start_time = row['startTime']
+                if 'endTime' not in row:
+                    row['endTime'] = None
+                end_time = row['endTime']
+
+                if Log.check_if_job_done(row['status']):
+                    seconds = self.time_difference(start_time, end_time)
+                    milliseconds = seconds * 1000  # this gives milliseconds
+                    throughput = (file_size_mb / milliseconds) * 1000
+
+                else:
+                    throughput = 0.0
+                throughput_list_in_order.append(throughput)
+            file_steps_df.insert(loc=2, column="Mbps", value=throughput_list_in_order)
+        print(file_steps_df)
+
+        if output_file is not None:
+            output_file +='.csv'
+            with open(output_file, 'a') as f:
+                file_steps_df.to_csv(f, index=False, header=True)
+            print("Output appended to", output_file)
 
     def time_difference(self, start_time, end_time):
-        start_date_time_obj = datetime.fromisoformat(start_time.split("+")[0])
-        end_date_time_obj = datetime.fromisoformat(end_time.split("+")[0])
+        print(start_time, end_time)
+        start_date_time_obj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        end_date_time_obj = datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        # start_date_time_obj = datetime.fromisoformat(str(start_time).split("+")[0])
+        # end_date_time_obj = datetime.fromisoformat(str(end_time).split("+")[0])
         tdelta = end_date_time_obj - start_date_time_obj
         return tdelta.total_seconds()
 
-    def plot_graphs(self, data, batchSteps):
-        plot_data = {}
-        for id, batch_step in batchSteps.items():
-            step_name = batch_step["step_name"]
-            if step_name not in plot_data:
-                timeTaken = batch_step["timeTaken"]
-            if data[step_name]:
-                size = self.process_data(data[step_name])
-            try:
-                plot_data[step_name] = ((int(size) / 1000000) * 8) / timeTaken
-            except(Exception):
-                print("Plot not generated for ", step_name)
-                continue
-        xticks = [x for x in range(len(plot_data))]
+    def check_if_job_done(status):
+        if status == "COMPLETED" or status == "FAILED" or status == "ABANDONED" or status == "STOPPED":
+            return True
+        else:
+            return False
 
-        plt.plot_size(plt.tw(), plt.th()/3)
-        plt.plot(xticks, plot_data.values())
-        plt.xlabel("File Name")
-        plt.ylabel("Throughput(Mbps)")
-        plt.xticks([x for x in range(len(plot_data))], plot_data.keys())
-        plt.title("Throughput Plot")
-        plt.show()
+    def has_job_started(batch_job_json):
+        if 'endTime' in batch_job_json:
+            return True
+        if 'startTime' in batch_job_json:
+            return True
+        else:
+            return False
 
-    def process_data(self, data):
-        data = data.split(",")
-        for i in data:
-            if "size" in i:
-                return i.split("=")[1]
+    def visualize_influx_data(self, job_influx_json, output_file):
+        # pd.DataFrame(columns=['jobId', 'concurrency', 'parallelism', 'pipelining', 'read'])
+        print("\nInflux Transfer Data: ")
+        cols_to_use = ['sourceRtt', 'destinationRtt', 'readThroughput', 'writeThroughput', 'bytesRead', 'bytesWritten', 'networkInterface', ]
+        influx_df = pd.DataFrame.from_records(job_influx_json)
+        influx_df = pd.concat([influx_df])
+        # print(influx_df.shape)
+        # print(influx_df.columns)
+        select_cols = []
+        for col in cols_to_use:
+            if col in influx_df.columns:
+                select_cols.append(col)
+            std_out_df = influx_df[select_cols]
+        print("\n",std_out_df)
+        if output_file is not None:
+            output_file += '.csv'
+            with open(output_file, 'a') as f:
+                std_out_df.to_csv(f, index=False, header=True)
+            print("Output appended to", output_file)
