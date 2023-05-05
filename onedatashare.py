@@ -10,7 +10,7 @@ Usage:
   onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
   onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>, --save=<SAVE>]
   onedatashare.py transfer [--config=<CONFIG>]
-  onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>]
+  onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>] [--experiment_file=<EXPERIMENT_FILE>]
   onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE> --monitor_direct=<MONITOR_DIRECT>]
   onedatashare.py --version
 
@@ -332,9 +332,10 @@ if __name__ == '__main__':
         measurement_only = args['--measurement_only']
         all_jobs = bool(args['--all'])
         list_job_ids = bool(args['--list_job_ids'])
+        experiment_file = args['--experiment_file']
         qg.get_data(job_id=job_id, end_date=end_date, start_date=start_date,
                     influx_only=bool(measurement_only), cdb_only=bool(batch_job_only), all=all_jobs,
-                    list_job_ids=list_job_ids)
+                    list_job_ids=list_job_ids, experiment_file=experiment_file)
     elif args['monitor']:
         qg = QueryGui()
         job_id = args['--job_id']

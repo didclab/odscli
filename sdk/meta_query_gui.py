@@ -1,4 +1,5 @@
 import os
+import csv
 
 import pandas as pd
 from sdk.meta_query import MetaQueryAPI
@@ -124,7 +125,7 @@ class QueryGui:
         df = pd.DataFrame(job_ids, columns=['Job_Ids'])
         print(tabulate(df, headers='keys', tablefmt='psql'))
 
-    def get_data(self, start_date, influx_only, cdb_only, job_id, all, list_job_ids, end_date):
+    def get_data(self, start_date, influx_only, cdb_only, job_id, all, list_job_ids, end_date, experiment_file):
         transfer_url = os.getenv('TRANSFER_SERVICE_URL')
         print("Querying CDB: ", cdb_only, " Querying Influx: ", influx_only)
         start_date = self.parse_time(start_date)
@@ -169,12 +170,12 @@ class QueryGui:
 
         if cdb_only:
             if len(job_batch_json) > 0:
-                self.log.visualize_job(job_batch_json)
-                self.log.visualize_steps(job_batch_json)
+                self.log.visualize_job(job_batch_json,experiment_file)
+                self.log.visualize_steps(job_batch_json,experiment_file)
 
         if influx_only:
             if len(job_influx_json) > 0:
-                self.log.visualize_influx_data(job_influx_json)
+                self.log.visualize_influx_data(job_influx_json,experiment_file)
 
     def parse_time(self, time):
         if time is None:

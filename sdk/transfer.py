@@ -73,6 +73,7 @@ class Transfer():
         # body={"source":{"type":request.source.type,"credId":request.source.credentialId,"parentInfo":{"id":request.source.parentInfo.id,"path":request.source.parentInfo.path,"size":request.source.parentInfo.size},"infoList":[{"id":request.source.info.id,"path":request.source.info.path}]},"destination":{"type":request.destination.type,"credId":request.destination.credentialId,"parentInfo":{"id":request.destination.info.id,"path":request.destination.info.path,"size":request.destination.info.size}},"options":{"concurrencyThreadCount":request.options.concurrencyThreadCount,"pipeSize":request.options.pipeSize,"chunkSize":request.options.chunkSize,"parallelThreadCount":request.options.parallelThreadCount}}
         # jsOb = json.dumps(body)
         hoststring = constants.ODS_PROTOCOL+host+constants.TRANSFER
+        # print(hoststring)
         cookies = dict(ATOKEN=token)
         headers={"Content-Type":"application/json","Authorization": "Bearer "+token+""}
         print(request.toJSON())

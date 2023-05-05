@@ -1,11 +1,13 @@
 import pandas as pd
 from datetime import datetime
 import plotext as plt
+from pathlib import Path
+import csv
 
 
 class Log:
 
-    def visualize_job(self, batch_job_json):
+    def visualize_job(self, batch_job_json, output_file=None):
         job_params = batch_job_json['jobParameters']
         print("Job MetaData: ")
         job_size = int(batch_job_json['jobParameters']['jobSize'])
@@ -30,8 +32,14 @@ class Log:
             job_df.loc[len(job_df.index)] = one_row
         print(job_df)
         print("\n")
+        if output_file is not None:
+            output_file +='.csv'
+            job_df.to_csv(output_file, index=False)
+            print("Output saved to", output_file)
 
-    def visualize_steps(self, batch_job_json):
+
+
+    def visualize_steps(self, batch_job_json, output_file=None):
         print("File MetaData: ")
         file_steps_df = pd.DataFrame.from_records(batch_job_json['batchSteps'])
         job_params = batch_job_json['jobParameters']
@@ -70,6 +78,12 @@ class Log:
             file_steps_df.insert(loc=2, column="Mbps", value=throughput_list_in_order)
         print(file_steps_df)
 
+        if output_file is not None:
+            output_file +='.csv'
+            with open(output_file, 'a') as f:
+                file_steps_df.to_csv(f, index=False, header=True)
+            print("Output appended to", output_file)
+
     def time_difference(self, start_time, end_time):
         print(start_time, end_time)
         start_date_time_obj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -93,7 +107,7 @@ class Log:
         else:
             return False
 
-    def visualize_influx_data(self, job_influx_json):
+    def visualize_influx_data(self, job_influx_json, output_file):
         # pd.DataFrame(columns=['jobId', 'concurrency', 'parallelism', 'pipelining', 'read'])
         print("\nInflux Transfer Data: ")
         cols_to_use = ['sourceRtt', 'destinationRtt', 'readThroughput', 'writeThroughput', 'bytesRead', 'bytesWritten', 'networkInterface', ]
@@ -107,3 +121,8 @@ class Log:
                 select_cols.append(col)
             std_out_df = influx_df[select_cols]
         print("\n",std_out_df)
+        if output_file is not None:
+            output_file += '.csv'
+            with open(output_file, 'a') as f:
+                std_out_df.to_csv(f, index=False, header=True)
+            print("Output appended to", output_file)
