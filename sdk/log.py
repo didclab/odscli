@@ -4,6 +4,7 @@ import plotext as plt
 from pathlib import Path
 import csv
 
+
 class Log:
 
     def visualize_job(self, batch_job_json, output_file=None):

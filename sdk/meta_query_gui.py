@@ -177,7 +177,6 @@ class QueryGui:
             if len(job_influx_json) > 0:
                 self.log.visualize_influx_data(job_influx_json,experiment_file)
 
-
     def parse_time(self, time):
         if time is None:
             return None
