@@ -1,9 +1,6 @@
 import pandas as pd
 from datetime import datetime
-import plotext as plt
-from pathlib import Path
-import csv
-
+import os
 
 class Log:
 
@@ -109,6 +106,7 @@ class Log:
 
     def visualize_influx_data(self, job_influx_json, output_file):
         # pd.DataFrame(columns=['jobId', 'concurrency', 'parallelism', 'pipelining', 'read'])
+
         print("\nInflux Transfer Data: ")
         cols_to_use = ['sourceRtt', 'destinationRtt', 'readThroughput', 'writeThroughput', 'bytesRead', 'bytesWritten', 'networkInterface', ]
         influx_df = pd.DataFrame.from_records(job_influx_json)
@@ -122,7 +120,11 @@ class Log:
             std_out_df = influx_df[select_cols]
         print("\n",std_out_df)
         if output_file is not None:
-            output_file += '.csv'
+            #if we are saving the data to file then make sure the directories exist.
+            directory_path = os.path.dirname(output_file)
+            if not os.path.exists(directory_path):
+                os.makedirs(directory_path)
+
             with open(output_file, 'a') as f:
                 std_out_df.to_csv(f, index=False, header=True)
             print("Output appended to", output_file)
