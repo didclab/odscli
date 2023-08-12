@@ -170,12 +170,12 @@ class QueryGui:
 
         if cdb_only:
             if len(job_batch_json) > 0:
-                self.log.visualize_job(job_batch_json,experiment_file)
-                self.log.visualize_steps(job_batch_json,experiment_file)
+                self.log.visualize_job(job_batch_json, experiment_file)
+                self.log.visualize_steps(job_batch_json, experiment_file)
 
         if influx_only:
             if len(job_influx_json) > 0:
-                self.log.visualize_influx_data(job_influx_json,experiment_file)
+                self.log.visualize_influx_data(job_influx_json, experiment_file)
 
     def parse_time(self, time):
         if time is None:
@@ -204,7 +204,8 @@ class QueryGui:
         destCredType = batch_job_cdb['jobParameters']['destCredentialType']
         csv_headers = ['jobId', 'jobSizeMb', 'totalSeconds', 'throughputMbps', 'concurrency', 'parallelism',
                        'pipelining', 'sourceType', 'destType']
-        totalSeconds = pd.Timedelta(self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
+        totalSeconds = pd.Timedelta(
+            self.job_batch_df['endTime'].tolist()[0] - self.job_batch_df['startTime'].tolist()[0]).seconds
         thrpt = job_size / totalSeconds
         if output_file is not None:
             output_path = Path(output_file)
@@ -221,11 +222,10 @@ class QueryGui:
                 csvwriter = csv.writer(f, lineterminator="\n")
                 csvwriter.writerow(csv_data)
 
-        else:
-            print('JobId: ', job_id)
-            print('\tJob size in Megabits: ', job_size)
-            print('\tTotal Time for job to complete: ', totalSeconds)
-            print('\tTotal Job throughput: ', job_size / totalSeconds, "Mbps")
+        print('JobId: ', job_id)
+        print('\tJob size in Megabits: ', job_size)
+        print('\tTotal Time for job to complete: ', totalSeconds)
+        print('\tTotal Job throughput: ', job_size / totalSeconds, "Mbps")
 
     def transform_start_end_last(self, df):
         if 'startTime' in df.columns:
