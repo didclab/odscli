@@ -44,7 +44,7 @@ class QueryGui:
         local_retry = 0
         end_monitor = False
         while end_monitor is False and local_retry < max_retry:
-            job_data_influx = self.mq.query_job_id_influx(job_id=job_id)
+            # job_data_influx = self.mq.query_job_id_influx(job_id=job_id)
             job_batch_cdb = self.mq.query_transferservice_direct(job_id, transfer_url)
             if 'endTime' not in job_batch_cdb:
                 job_batch_cdb['endTime'] = None
@@ -58,11 +58,11 @@ class QueryGui:
                 time.sleep(delta_t)
                 continue
 
-            if len(job_data_influx) < 1:
-                print('Influx has no measurements of jobId: ', job_id)
-                local_retry += 1
-            else:
-                self.log.visualize_influx_data(job_data_influx, output_file)
+            # if len(job_data_influx) < 1:
+            #     print('Influx has no measurements of jobId: ', job_id)
+            #     local_retry += 1
+            # else:
+            #     self.log.visualize_influx_data(job_data_influx, output_file)
 
             if Log.check_if_job_done(job_batch_cdb['status']):
                 print('\n JobId: ', job_id, ' has final status of ', job_batch_cdb['status'])
@@ -91,7 +91,7 @@ class QueryGui:
         end_monitor = False
         while end_monitor is False and local_retry < max_retry:
             resp = self.mq.monitor(job_id=job_id)
-            job_data_influx = self.mq.query_job_id_influx(job_id=job_id)
+            # job_data_influx = self.mq.query_job_id_influx(job_id=job_id)
             job_batch_cdb = resp.json()['jobData']
             if 'endTime' not in job_batch_cdb:
                 job_batch_cdb['endTime'] = None
@@ -105,11 +105,11 @@ class QueryGui:
                 time.sleep(delta_t)
                 continue
 
-            if len(job_data_influx) < 1:
-                print('Influx has no measurements of jobId: ', job_id)
-                local_retry += 1
-            else:
-                self.log.visualize_influx_data(job_data_influx, output_file)
+            # if len(job_data_influx) < 1:
+            #     print('Influx has no measurements of jobId: ', job_id)
+            #     local_retry += 1
+            # else:
+            #     self.log.visualize_influx_data(job_data_influx, output_file)
 
             if Log.check_if_job_done(job_batch_cdb['status']):
                 print('\n JobId: ', job_id, ' has final status of ', job_batch_cdb['status'])
