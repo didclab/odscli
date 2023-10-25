@@ -4,12 +4,6 @@
 Usage:
   onedatashare.py login [--user=<USER> --password=<PWD> -H HOST]
   onedatashare.py logout
-  onedatashare.py addRemote (<host> <type>) [--user=<USER> --pass=<pass> --keyfile=<keyfile> --credentialId=<credId>]
-  onedatashare.py rmRemote (<credId> <type>)
-  onedatashare.py lsRemote <type>
-  onedatashare.py (ls | rm | mkdir) <credId> <type> [--path=<path>] [--toDelete=<DELETE>] [--folderToCreate=<DIR>][--jsonprint]
-  onedatashare.py transfer (<source_type> <source_credid> <source_path> (-f FILES)... <dest_type> <dest_credid> <dest_path>) [--concurrency=<CONCURRENCY>, --pipesize=<PIPE_SIZE>, --parallel=<PARALLEL>, --chunksize=<CHUNK_SIZE>, --compress=<COMPRESS>, --encrypt=<ENCRYPT>, --optimizer=<OPTIMIZE>, --overwrite=<OVERWRITE>, --retry=<RETRY>, --verify=<VERIFY>, --save=<SAVE>]
-  onedatashare.py transfer [--config=<CONFIG>]
   onedatashare.py query [--job_id=<JOB_ID> | --start_date=<START_DATE> | (--start_date=<START_DATE>  --end_date=<END_DATE>) | --all | --list_job_ids] [--batch_job_only=<BATCH_ONLY> | --measurement_only=<MEASURE_ONLY>] [--experiment_file=<EXPERIMENT_FILE>]
   onedatashare.py monitor [--job_id=<JOB_ID> --delta_t=<DELTA_T> --experiment_file=<EXP_FILE> --monitor_direct=<MONITOR_DIRECT>]
   onedatashare.py --version
@@ -69,14 +63,6 @@ import os
 import json
 from datetime import datetime
 import sdk.token_utils as tokUt
-from sdk.credential_service import CredService as CredS
-from sdk.endpoint import Endpoint as endpoint, EndpointType
-from sdk.transfer import TransferRequest
-from sdk.transfer import TransferOptions
-from sdk.transfer import Source
-from sdk.transfer import Destination
-from sdk.transfer import Iteminfo
-from sdk.transfer import Transfer as Transfer
 from sdk.meta_query_gui import QueryGui
 from pytimeparse.timeparse import timeparse
 
@@ -105,144 +91,9 @@ def logout():
     tokUt.logout()
     print("\nLogged Out\n")
 
-
-def addRemote(remoteHost, remoteUser, remotePassword, keyfile, type, credId):
-    host, user, token = tokUt.readConfig()
-    try:
-        typeE, isOAuth = endpoint.type_handle(type)
-    except:
-        print("Type Error")
-        return
-    if isOAuth:
-        CredS.oauth_Url(host, typeE, token)
-    else:
-        # First, check to make sure both are not none.
-        if keyfile != None and keyfile != "":
-            print("Used the keyfile")
-            with open(keyfile, "r") as f:
-                keyfile = f.read()
-            CredS.register_Credential(host, typeE, credId, remoteHost, remoteUser, keyfile, token)
-        else:
-            print("Used the password")
-            CredS.register_Credential(host, typeE, credId, remoteHost, remoteUser, remotePassword, token)
-
-
-def listRemote(type):
-    host, user, token = tokUt.readConfig()
-    res = CredS.get_CredentialODS(type, token, host)  # Needs to be handled better for errors
-    print("Remotes:\n")
-    for cred in res["list"]:
-        print("\t" + cred)
-    return res["list"]
-
-
-def deleteRemote(type, credId):
-    host, user, token = tokUt.readConfig()
-    res = CredS.delete_CredentialODS(type, credId, token, host)  # Needs to be handled better for errors
-    if res.status_code != 200:
-        print("error with deleting")
-    elif res.status_code == 200:
-        print("Credential Deleted")
-
-
-def ls(type, credId, path):
-    host, user, token = tokUt.readConfig()
-    jsonstr = endpoint.list(credId=credId, path=path, id=path, host=host, type=type,
-                            atok=token)  # Needs to be handled better for errors
-    jsonOb = json.loads(jsonstr)  # Needs to be handled better for errors
-    diction = jsonOb
-    pad = len(str(diction.get("size")))
-    padN = len(str(diction.get("name")))
-    temp = diction.get("files")
-    for names in temp:
-        if len(str(names.get('size'))) > pad:
-            pad = len(str(names.get('size')))
-        if len(str(names.get('name'))) > padN:
-            padN = len(str(names.get('name')))
-    print("Permissions\tSize\tTime\tDir\tName\tid\n")
-    formating = "{}\t{:>" + str(pad) + "}\t{}\t{}\t.({})\t{}\n"
-    print(formating.format(diction.get('permissions'), diction.get('size'), datetime.fromtimestamp(diction.get('time')),
-                           diction.get('dir'), diction.get('name'), diction.get('id')))
-    diction = diction.get('files')
-    if args['--jsonprint']:
-        print(json.dumps(jsonOb))
-    else:
-        for names in diction:
-            formating = "{}\t{:>" + str(pad) + "}\t{}\t{}\t{:>" + str(padN) + "}\t{}\n"
-            print(
-                formating.format(names.get('permissions'), names.get('size'), datetime.fromtimestamp(names.get('time')),
-                                 names.get('dir'), names.get('name'), names.get('id')))
-
-
-def rm(type, credId, toDelete, path=""):
-    if toDelete is None:
-        print(
-            "You did not specify a directory to make. You probably used the --path flag but please the --toDelete flag instead. The --path flag is for the id/path to the parent directory")
-        return
-
-    host, user, token = tokUt.readConfig()
-    res = endpoint.remove(credId=credId, path=path, id=path, host=host, type=type, atok=token, toDelete=toDelete)
-    if res.status_code != 200:
-        print("Unable to delete " + toDelete + "\n The error status is " + str(res.status_code))
-    elif res.status_code == 200:
-        print("Deleted " + toDelete)
-    print(res.text)
-
-
-def mkdir(type, credId, dirToMake, path=""):
-    if dirToMake is None:
-        print(
-            "You did not specify a directory to make. You probably used the --path flag but please the --folderToCreate flag instead. The --path flag is for the id/path to the parent directory")
-        return
-    if str(type) == EndpointType.S3.value:
-        print(
-            'S3 does not support making directories. Please the directory you wish your files to end up in as the prefix for your destination. As folders are just files with a common prefix')
-        return
-    host, user, token = tokUt.readConfig()
-    res = endpoint.mkdir(credId=credId, path=path, id=path, host=host, type=type, atok=token, folderToCreate=dirToMake)
-    if res.status_code != 200:
-        print("Unable to mkdir " + dirToMake + "\n The error status is " + str(res.status_code))
-        print(res.text)
-    elif res.status_code == 200:
-        print("Directory created " + dirToMake)
-    print(res)
-
-
-# <source_type> <source_credid> <source_path> -f FILE... <dest_type> <dest_credid> <dest_path>) [--concurrency, --pipesize, --parallel, --chunksize, --compress, --encrypt, --optimize, --overwrite, --retry, --verify
-def transfer(source_type, source_credid, file_list, dest_type, dest_credid, source_path="", dest_path="", concurrency=1,
-             pipesize=10, parallel=0, chunksize=10000000, compress=False, encrypt=False, optimizer="", overwrite=False,
-             retry=5, verify=False, save=None):
-
-    host, user, token = tokUt.readConfig()
-
-    infoList = []
-    for f in file_list:
-        if len(f) > 0:
-            infoList.append(Iteminfo(path=f, id=f, size=0, chunk_size=chunksize))
-
-    source = Source(infoList=infoList, type=source_type, credentialId=source_credid,
-                    parentInfo=Iteminfo(source_path, source_path, 0))
-    destination = Destination(type=dest_type, credentialId=dest_credid, parentInto=Iteminfo(dest_path, dest_path, 0))
-    transferOptions = TransferOptions(concurrency, pipesize, chunksize, parallel, compress, encrypt, optimizer,
-                                      overwrite, retry, verify)
-    transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
-
-    if save is not None:
-        tokUt.writeTransferConfig(user, source_type, source_credid, file_list, dest_type, dest_credid, source_path, dest_path,
-                                  concurrency, pipesize, parallel, chunksize, compress, encrypt, optimizer, overwrite,
-                                  retry, verify,save)
-
-    print('Sending Transfer Request: ', transferRequest)
-    r = Transfer.transfer(host, token, transferRequest)
-
-
-    print("status code: " + str(r.status_code))
-    print(r.text)
-#
-
 def transfer_config(config_name):
     host, user, token = tokUt.readConfig()
-    transfer_config = tokUt.readTransferConfig(user,config_name)
+    transfer_config = tokUt.readTransferConfig(user, config_name)
     print('Transfer Config:', transfer_config)
 
     # Create transfer request
@@ -278,12 +129,12 @@ def transfer_config(config_name):
                                       overwrite, retry, verify)
     transferRequest = TransferRequest(source=source, dest=destination, TransfOp=transferOptions)
 
-
     print('Sending Transfer Request: ', transferRequest)
     r = Transfer.transfer(host, token, transferRequest)
 
     print("status code: " + str(r.status_code))
     print(r.text)
+
 
 # ( <source_credid> <source_path> (-f FILE)... <dest_type> <dest_credid> <dest_path>)
 if __name__ == '__main__':
@@ -294,35 +145,9 @@ if __name__ == '__main__':
         login(host=args["-H"], user=user, password=password)
     elif args['logout']:
         logout()
-    elif args['addRemote']:
-        credId = args['--user'] + "@" + args['<host>']
-        if (args['--credentialId'] != None):
-            credId = args['--credentialId']
-        addRemote(remoteHost=args['<host>'], remoteUser=args['--user'], remotePassword=args['--pass'],
-                  keyfile=args['--keyfile'], credId=credId, type=args['<type>'])
-    elif args['lsRemote']:
-        listRemote(args['<type>'])
-    elif args['rmRemote']:
-        deleteRemote(args['<type>'], args['<credId>'])
-    elif args['ls']:
-        ls(args['<type>'], args['<credId>'], args['--path'])
-    elif args['rm']:
-        rm(type=args['<type>'], credId=args['<credId>'], path=args['--path'], toDelete=args['--toDelete'])
-    elif args['mkdir']:
-        mkdir(type=args['<type>'], credId=args['<credId>'], path=args['--path'], dirToMake=args['--folderToCreate'])
     elif args['transfer']:
         if args['--config']:
-            transfer_config(config_name = args['--config'])
-        else:
-            transfer(source_type=args['<source_type>'], source_credid=args['<source_credid>'],
-                     source_path=args['<source_path>'], file_list=args['FILES'], dest_type=args['<dest_type>'],
-                     dest_credid=args['<dest_credid>'], dest_path=args['<dest_path>'],
-                     concurrency=args['--concurrency'],
-                     chunksize=args['--chunksize'],
-                     parallel=args['--parallel'], compress=args['--compress'], encrypt=args['--encrypt'],
-                     optimizer=args['--optimizer'], overwrite=args['--overwrite'], retry=args['--retry'],
-                     verify=args['--verify'], pipesize=args['--pipesize'], save=args['--save'])
-
+            transfer_config(config_name=args['--config'])
     elif args['query']:
         qg = QueryGui()
         job_id = args['--job_id']

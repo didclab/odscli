@@ -7,3 +7,5 @@ python-dateutil~=2.8.2
 pytimeparse~=1.1.8
 pprintpp~=0.4.0
 plotext~=5.2.7
+click
+rich

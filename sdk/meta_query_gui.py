@@ -27,9 +27,8 @@ class QueryGui:
         self.job_size = 0
         self.log = Log()
 
-    def monitor_direct(self, job_id, delta_t, output_file):
+    def monitor_direct(self, job_id, delta_t, output_file, max_retry=5):
         transfer_url = os.getenv('TRANSFER_SERVICE_URL')
-        max_retry = 5
         if job_id is None:
             # get the last job_id listed from the query
             job_ids = self.mq.query_job_ids_direct(transfer_url)
@@ -73,8 +72,7 @@ class QueryGui:
                 print('Failed to monitor transfer ')
             time.sleep(delta_t)
 
-    def monitor(self, job_id, delta_t, output_file):
-        max_retry = 5
+    def monitor(self, job_id, delta_t, output_file, max_retry=5):
         if job_id is None:
             # get the last job_id listed from the query
             job_ids = self.mq.query_all_jobs_ids()

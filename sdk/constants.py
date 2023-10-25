@@ -1,9 +1,7 @@
-
-
-#ROUTES FOR PYTHON TO GRAB
+# ROUTES FOR PYTHON TO GRAB
 
 PORT = "8080"
-ODS_PROTOCOL="https://"
+ODS_PROTOCOL = "https://"
 LISTV1 = "/api/{type}/ls"
 LISTV2 = "/api/{type}/ls"
 MKDIRV1 = "/api/{type}/mkdir"
@@ -17,6 +15,7 @@ AUTHENTICATEV1 = "/authenticate"
 AUTHENTICATEV2 = "/authenticate"
 CRED_ACCOUNT_REGISTERV2 = "/api/cred/{type}"
 CRED_ACCOUNT_DELETE = "/api/cred/{type}/{credID}"
+SCHEDULE = "/api/job"
 
 CRED_OAUTH_REGISTERV2 = "/api/oauth"
 CRED_ACCOUNT_GETV2 = "/endpoint-cred/{userId}/{type}"
