@@ -3,29 +3,34 @@ import requests
 import configparser
 import sdk.constants as constants
 import json
-#Adds the hostname, username, password and user token for the ACTIVE onedatashare backend
-# odsConfig.ini
-#Python ConfigParser
 
-config_path=os.environ['HOME']+"/.config/"
+# Adds the hostname, username, password and user token for the ACTIVE onedatashare backend
+# odsConfig.ini
+# Python ConfigParser
+
+config_path = os.environ['HOME'] + "/.config/"
 config_file_name = ".odsConfig.ini"
 config_absolute_path = config_path + config_file_name
 
 config_transfer_file = ".odsConfigTransfer_"
 config_transfer_absolute_path = config_path + config_transfer_file
-def writeConfig(hostname,username,token):
+
+
+def writeConfig(hostname, username, token):
     config = configparser.ConfigParser()
-    config["OneDataShare"] = {'hostname':hostname,'username':username,'token':token}
+    config["OneDataShare"] = {'hostname': hostname, 'username': username, 'token': token}
     os.makedirs(config_path, exist_ok=True)
     with open(config_absolute_path, 'w') as configfile:
         try:
             config.write(configfile)
         except:
             print("Error Writing Config")
-#Attempts to read onedatashare backend information from config file
-#Throws Exception when there is an issue reading config or it does not exist
-#Returns Hostname, Username, Token
-#Python ConfigParser
+
+
+# Attempts to read onedatashare backend information from config file
+# Throws Exception when there is an issue reading config or it does not exist
+# Returns Hostname, Username, Token
+# Python ConfigParser
 
 def readConfig():
     config = configparser.ConfigParser()
@@ -34,45 +39,47 @@ def readConfig():
     except:
         print('Config Read Issue are you logged in?')
         return False
-    return config['OneDataShare']['hostname'],config['OneDataShare']['username'],config['OneDataShare']['token']
+    return config['OneDataShare']['hostname'], config['OneDataShare']['username'], config['OneDataShare']['token']
 
 
-def isValidUser(host:str,email:str)->bool:
-    isValidURL = "http://"+host+constants.VALIDATE_EMAILV2
-    body = {'email':email}
-    req = requests.post(isValidURL,json=body)# Needs to be handled better for errors
+def isValidUser(host: str, email: str) -> bool:
+    isValidURL = "http://" + host + constants.VALIDATE_EMAILV2
+    body = {'email': email}
+    req = requests.post(isValidURL, json=body)  # Needs to be handled better for errors
     return req.json()
 
 
-def login(host,user,password):
-    if isValidUser(host,user):
-        loginURL = "https://"+host+constants.AUTHENTICATEV2
-        body = {'email':user,'password':password}
-        req = requests.post(loginURL,json=body, timeout=10)
-        atoken = req.cookies.get_dict()# Needs to be handled better for errors
+def login(host, user, password):
+    if isValidUser(host, user):
+        loginURL = "https://" + host + constants.AUTHENTICATEV2
+        body = {'email': user, 'password': password}
+        req = requests.post(loginURL, json=body, timeout=10)
+        atoken = req.cookies.get_dict()  # Needs to be handled better for errors
         if req.status_code != 200:
             print("\nError Handling Login\n")
             if req.status_code == 401:
                 print("Possibly Bad Password")
-            return False,""
-        print("\nUser Authentication Token:")# Move this TO THE CLI SIDE
-        print(atoken['ATOKEN'])# Move this TO THE CLI SIDE
-        if req.status_code==200:
-            writeConfig(host,user,atoken.get('ATOKEN'))
-            return True,atoken.get('ATOKEN')
+            return False, ""
+        print("\nUser Authentication Token:")  # Move this TO THE CLI SIDE
+        print(atoken['ATOKEN'])  # Move this TO THE CLI SIDE
+        if req.status_code == 200:
+            writeConfig(host, user, atoken.get('ATOKEN'))
+            return True, atoken.get('ATOKEN')
     else:
         print("Not Valid User")
-        return False,""
+        return False, ""
+
+
 def logout():
-    writeConfig('None','None','None')
+    writeConfig('None', 'None', 'None')
 
 
 def writeTransferConfig(username, source_type, source_credid, file_list, dest_type, dest_credid, source_path, dest_path,
                         concurrency, pipesize, parallel, chunksize, compress, encrypt, optimizer, overwrite,
-                        retry, verify,save):
+                        retry, verify, save):
     config = configparser.ConfigParser()
     # load existing config
-    file_name = config_transfer_absolute_path+username+".ini"
+    file_name = config_transfer_absolute_path + username + ".ini"
     if os.path.exists(file_name):
         config.read(file_name)
 
@@ -144,4 +151,3 @@ def readTransferConfig(username, transfer_name):
     else:
         print("Config file does not exist.")
         return None
-
