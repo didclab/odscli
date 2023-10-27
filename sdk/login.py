@@ -14,7 +14,7 @@ def login():
     pass
 
 
-@login.command("login")
+@login.command("auth")
 @click.option(
     "--username", prompt=False,
     default=lambda: os.environ.get("ODS_CLI_USER"),
@@ -25,9 +25,10 @@ def login():
     confirmation_prompt=True, default=lambda: os.environ.get("ODS_CLI_PWD"),
     help="Password (default: from ODS_CLI_PWD environment variable)"
 )
-@click.option("--host", default="https://onedatashare.org")
-def login(user, password, host):
-    work, tok = token_utils.login(host=host, user=user, password=password)
+@click.option("--host", default="onedatashare.org")
+def auth(username, password, host):
+    print(host)
+    work, tok = token_utils.login(host=host, user=username, password=password)
 
     if work:
         print("\nSuccessfully Logged In!\n")
