@@ -89,6 +89,8 @@ def query_job(id, url):
 # Problem:
 # 1. We need to make the querying more accurate since multiple buckets can have the same jobId.
 # Consider ODS Connector using HSQL and ODS prod same user having multiple job id=1. Need to clean that out.
+#Show the slowest throughput of start read -> write end.
+#Add an API call to allow the user query progress of the job without them needing the whole influx json.
 @query.command("measurements")
 @click.argument("id")
 @click.option("network", "-n", is_flag=True, default=False)
@@ -99,7 +101,7 @@ def query_job_measurements(id, network, host, save_to_file):
     if save_to_file:
         with open(save_to_file, 'w') as json_file:
             json.dump(influx_json, json_file)
-
+    print(influx_json)
     visualize_influx_data(influx_json, network, host)
 
 

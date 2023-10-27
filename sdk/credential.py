@@ -59,8 +59,7 @@ def rm_credential(type, credentialid):
 @click.option('--keyfile', type=click.Path(exists=True), default=None)
 def add_credential(uri, username, password, credentialid, keyfile, type):
     host, user, token = token_utils.readConfig()
-    # ods_uri = constants.ODS_PROTOCOL + host + constants.CRED_ACCOUNT_REGISTERV2
-    ods_uri = "http://localhost:8080" + constants.CRED_ACCOUNT_REGISTERV2
+    ods_uri = constants.ODS_PROTOCOL + host + constants.CRED_ACCOUNT_REGISTERV2
     req_formated = ods_uri.format(type=type)
     cookies = dict(ATOKEN=token)
     headers = {"Authorization": "Bearer " + token + ""}

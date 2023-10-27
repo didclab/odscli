@@ -27,8 +27,7 @@ def management():
 @click.option('--id', default="", help="For gdrive, box, dropbox please pass in the ID of the folder")
 def ls(credentialid, path, type, id):
     host, user, token = token_utils.readConfig()
-    # req = constants.ODS_PROTOCOL + host + constants.LISTV2
-    req = "http://localhost:8080" + constants.LISTV2
+    req = constants.ODS_PROTOCOL + host + constants.LISTV2
     reqForm = req.format(type=type)
     cookies = dict(ATOKEN=token)
     body = {'credId': credentialid, 'path': path, 'identifier': id}
@@ -49,8 +48,7 @@ def ls(credentialid, path, type, id):
 @click.argument("path_to_delete", type=click.STRING)
 def rm(type, credentialid, path_to_delete):
     host, user, token = token_utils.readConfig()
-    # req = constants.ODS_PROTOCOL + host + constants.REMOVEV2
-    req = "http://localhost:8080" + constants.REMOVEV2
+    req = constants.ODS_PROTOCOL + host + constants.REMOVEV2
     reqForm = req.format(type=type)
     print(reqForm)
     cookies = dict(ATOKEN=token)

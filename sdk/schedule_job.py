@@ -20,7 +20,6 @@ def schedule():
 @schedule.command('ls')
 def ls():
     host, user, token = token_utils.readConfig()
-    # url = "http://localhost:8080" + constants.SCHEDULE + "/list"
     url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/list"
     cookies = dict(ATOKEN=token)
     resp = requests.get(url, params={'userEmail': user}, cookies=cookies)
@@ -32,7 +31,6 @@ def ls():
 @click.argument('job_uuid', type=click.UUID)
 def details(job_uuid):
     host, user, token = token_utils.readConfig()
-    # url = "http://localhost:8080" + constants.SCHEDULE + "/list"
     url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/details"
     cookies = dict(ATOKEN=token)
     resp = requests.get(url, params={'jobUuid': job_uuid}, cookies=cookies)
@@ -44,7 +42,6 @@ def details(job_uuid):
 @click.argument('job_uuid', type=click.UUID)
 def rm(job_uuid):
     host, user, token = token_utils.readConfig()
-    # url = "http://localhost:8080" + constants.SCHEDULE + "/list"
     url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/details"
     cookies = dict(ATOKEN=token)
     resp = requests.delete(url, params={'jobUuid': job_uuid}, cookies=cookies)
@@ -121,7 +118,7 @@ def submit(source_credential_id, source_type, file_source_path, files, destinati
         with open("transfer_" + source_credential_id + "_to_" + destination_credential_id + ".json", "w+") as f:
             json.dump(body, f, indent=4)
 
-    url = "http://localhost:8080" + constants.SCHEDULE + "/schedule"
+    url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/schedule"
     cookies = dict(ATOKEN=token)
     resp = requests.post(url, cookies=cookies, json=body)
     print(resp.status_code)
@@ -139,7 +136,7 @@ def config(filename, schedule_time):
             data['options']['scheduledTime'] = schedule_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             print(data)
             host, user, token = token_utils.readConfig()
-            url = "http://localhost:8080" + constants.SCHEDULE + "/schedule"
+            url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/schedule"
             cookies = dict(ATOKEN=token)
             resp = requests.post(url, cookies=cookies, json=data)
             print(resp.status_code)
@@ -148,3 +145,26 @@ def config(filename, schedule_time):
         print(f"File not found: {filename}")
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON: {e}")
+
+
+@schedule.command("parameters")
+@click.argument('node_name', type=click.STRING)
+@click.option('--concurrency','-cc', type=click.INT, help="Number of files to transfer concurrently")
+@click.option('--parallelism', '-p', type=click.INT, help="Number of parallel threads per file")
+@click.option('--pipelining', '-pp', type=click.INT, help="Pipelining level to use for file transfer")
+@click.option('--chunksize', '-cs', type=click.INT, help="Chunksize to use for file transfer, currently not supported")
+def parameters(node_name, concurrency, parallelism, pipelining, chunksize):
+    body = {
+        "concurrency": concurrency,
+        "parallelism": parallelism,
+        "pipelining": pipelining,
+        "chunkSize": chunksize,
+        "transferNodeName": node_name
+    }
+    host, user, token = token_utils.readConfig()
+
+    url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/adjust"
+    cookies = dict(ATOKEN=token)
+    resp = requests.put(url, cookies=cookies, json=body)
+    print(resp.status_code)
+    print(resp.text)
