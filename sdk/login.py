@@ -3,18 +3,18 @@ import sdk.token_utils as token_utils
 import os
 
 
-@click.group('login_cli')
+@click.group('auth_cli')
 @click.pass_context
-def login_cli():
+def auth_cli():
     pass
 
 
-@login_cli.group('login')
-def login():
+@auth_cli.group('auth')
+def auth():
     pass
 
 
-@login.command("auth")
+@auth.command("login")
 @click.option(
     "--username", prompt=False,
     default=lambda: os.environ.get("ODS_CLI_USER"),
@@ -26,7 +26,7 @@ def login():
     help="Password (default: from ODS_CLI_PWD environment variable)"
 )
 @click.option("--host", default="onedatashare.org")
-def auth(username, password, host):
+def login(username, password, host):
     print(host)
     work, tok = token_utils.login(host=host, user=username, password=password)
 
@@ -36,3 +36,8 @@ def auth(username, password, host):
     else:
         print(
             "\nProblem Logging In try signing in on https://onedatashare.org to make sure your credentials are accurate\n")
+
+@auth.command("logout")
+def logout():
+    token_utils.logout()
+    print("Successfully logged out")

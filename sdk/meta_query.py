@@ -37,6 +37,7 @@ class MetaQueryAPI:
     def query_transferservice_direct(self, job_id, transfer_url):
         param = {"jobId": job_id}
         hostStr = transfer_url + JOB_DIRECT + "/execution"
+        print(hostStr)
         r = requests.get(hostStr, params=param)
         return r.json()
 
