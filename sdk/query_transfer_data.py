@@ -21,8 +21,6 @@ MONITOR = "/monitor"
 
 console = Console()
 
-meta_query_api = MetaQueryAPI()
-
 
 @click.group('query_cli')
 @click.pass_context
@@ -56,6 +54,7 @@ def monitor_job(id, direct, delta_t, save_to_file, max_retry):
 @click.option("--url", "-u", type=click.STRING,
               help="the url of the transfer-service to query if you want to query your ODS Connector")
 def list_user_job_ids(url):
+    meta_query_api = MetaQueryAPI()
     if url is not None:
         job_ids = meta_query_api.query_job_ids_direct(url)
     else:
@@ -72,6 +71,7 @@ def list_user_job_ids(url):
 @click.option("--url", "-u", type=click.STRING,
               help="The url of the transfer-service to query if you want to query your ODS Connector")
 def query_job(id, url):
+    meta_query_api = MetaQueryAPI()
     if url is not None:
         json_cdb = meta_query_api.query_transferservice_direct(id, url)
     else:
@@ -97,6 +97,7 @@ def query_job(id, url):
 @click.option("host", "-h", is_flag=True, default=False, help="Show host properties such as: (Memory, CPU count)")
 @click.option("save_to_file", '-stf', type=click.Path(), help="Default")
 def query_job_measurements(id, network, host, save_to_file):
+    meta_query_api = MetaQueryAPI()
     influx_json = meta_query_api.query_job_id_influx(id)
     if save_to_file:
         with open(save_to_file, 'w') as json_file:
@@ -111,6 +112,7 @@ def query_job_measurements(id, network, host, save_to_file):
 @click.option('--end', type=click.DateTime(), default=datetime.now(), help="ISO 8061 string of ending date time point")
 @click.option("--save_to_file", type=click.Path(exists=True, writable=True))
 def measurement_range(start, end, save_to_file):
+    meta_query_api = MetaQueryAPI()
     influx_points = meta_query_api.query_range_influx(start, end)
     visualize_influx_data(influx_points, True, True)
 
@@ -123,6 +125,7 @@ def measurement_range(start, end, save_to_file):
 def query_cdb(start, end, save_to_file):
     print(start)
     print(end)
+    meta_query_api = MetaQueryAPI()
 
     cdb_data = meta_query_api.query_range_cdb(start, end)
     print(cdb_data)
