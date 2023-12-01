@@ -129,18 +129,26 @@ def submit(source_credential_id, source_type, file_source_path, files, destinati
 @click.argument('filename', type=click.Path(exists=True, writable=True))
 @click.option('--schedule_time', type=click.DateTime(), default=datetime.now(),
               help='ISO 8061 date time string on when to run the job.')
-def config(filename, schedule_time):
+@click.option('--schedule_direct', type=click.STRING, default="")
+def config(filename, schedule_time, schedule_direct):
     try:
         with open(filename, "r") as json_file:
             data = json.load(json_file)
             data['options']['scheduledTime'] = schedule_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
             print(data)
-            host, user, token = token_utils.readConfig()
-            url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/schedule"
-            cookies = dict(ATOKEN=token)
-            resp = requests.post(url, cookies=cookies, json=data)
-            print(resp.status_code)
-            print(resp.text)
+            if len(schedule_direct) > 1:
+                url = 'http://'+schedule_direct+'/job/direct'
+                resp = requests.post(url, json=data)
+                print(resp.status_code)
+                print(resp.text)
+            else:
+                host, user, token = token_utils.readConfig()
+                url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/schedule"
+                cookies = dict(ATOKEN=token)
+                resp = requests.post(url, cookies=cookies, json=data)
+                print(resp.status_code)
+                print(resp.text)
     except FileNotFoundError:
         print(f"File not found: {filename}")
     except json.JSONDecodeError as e:

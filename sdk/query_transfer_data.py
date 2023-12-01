@@ -1,5 +1,9 @@
+import time
+
 import click
 
+from rich.progress import Progress, TextColumn, BarColumn, TransferSpeedColumn, TimeRemainingColumn
+from rich.progress import DownloadColumn
 from rich.console import Console
 from rich.table import Table
 from sdk.meta_query_gui import QueryGui, MetaQueryAPI
@@ -50,6 +54,73 @@ def monitor_job(id, direct, delta_t, save_to_file, max_retry):
         pq.monitor(id, int(timeparse(delta_t)), save_to_file, max_retry)
 
 
+@query.command("uuids")
+def list_user_job_uuids():
+    meta_query_api = MetaQueryAPI()
+    job_uuid_table = Table()
+    job_uuids = meta_query_api.query_job_uuids()
+    job_uuid_table.add_column("Job UUIDS")
+    for id in job_uuids:
+        job_uuid_table.add_row(str(id))
+    console.print(job_uuid_table)
+
+
+@query.command("progress")
+@click.argument("job_uuid", type=click.UUID)
+@click.option("--retry", "-r", type=click.INT, default=30)
+def progress(job_uuid, retry):
+    meta_query_api = MetaQueryAPI()
+    # transfer_summary = meta_query_api.query_job_progress(job_uuid)
+    # print(transfer_summary)
+    max_no_progress_checks = retry
+    retry_progress = 0
+    prev_transfer_summary = None
+
+    progress = Progress(
+        TextColumn("[bold blue]{task.fields[filename]}", justify="right"),
+        BarColumn(bar_width=None),
+        "[progress.percentage]{task.percentage:>3.1f}%",
+        "•",
+        DownloadColumn(),
+        "•",
+        TransferSpeedColumn(),
+        "•",
+        TimeRemainingColumn(),
+    )
+
+    task = progress.add_task("[cyan]Transferring...", total=None, start=False)
+    while not progress.finished:
+        transfer_summary = meta_query_api.query_job_progress(job_uuid)
+        if prev_transfer_summary is not None:
+            if transfer_summary['bytesRead'] == prev_transfer_summary['bytesRead'] and transfer_summary[
+                'bytesWritten'] == prev_transfer_summary['bytesWritten']:
+                retry_progress += 1
+            else:
+                progress.update(task, completed=float(transfer_summary['progressPercentage']))
+                progress.refresh()
+                retry_progress = 0
+
+        if retry_progress == max_no_progress_checks:
+            progress.stop()
+            console.print("[yellow] \nNo progress for too long. Exiting progress monitoring.")
+            return
+
+        prev_transfer_summary = transfer_summary
+        time.sleep(1)
+
+
+@query.command("monitor")
+@click.option("--job_id", type=click.INT, default=0)
+@click.option("--url", "-u", type=click.STRING, help="url to query if using an ods connector")
+@click.option("--experiment_file", type=click.Path(writable=True, dir_okay=False),
+              help="The file to put the results into")
+@click.option("--delta", type=click.INT)
+@click.option("--retry", type=click.INT, default=5)
+def monitor_job(job_id, url, experiment_file, delta, retry):
+    pq = QueryGui()
+    pq.monitor_direct(job_id=job_id, delta_t=delta, output_file=experiment_file, max_retry=retry, transfer_url=url)
+
+
 @query.command("ids")
 @click.option("--url", "-u", type=click.STRING,
               help="the url of the transfer-service to query if you want to query your ODS Connector")
@@ -89,8 +160,8 @@ def query_job(id, url):
 # Problem:
 # 1. We need to make the querying more accurate since multiple buckets can have the same jobId.
 # Consider ODS Connector using HSQL and ODS prod same user having multiple job id=1. Need to clean that out.
-#Show the slowest throughput of start read -> write end.
-#Add an API call to allow the user query progress of the job without them needing the whole influx json.
+# Show the slowest throughput of start read -> write end.
+# Add an API call to allow the user query progress of the job without them needing the whole influx json.
 @query.command("measurements")
 @click.argument("id")
 @click.option("network", "-n", is_flag=True, default=False)

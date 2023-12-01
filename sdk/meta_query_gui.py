@@ -27,8 +27,7 @@ class QueryGui:
         self.job_size = 0
         self.log = Log()
 
-    def monitor_direct(self, job_id, delta_t, output_file, max_retry=5):
-        transfer_url = os.getenv('TRANSFER_SERVICE_URL')
+    def monitor_direct(self, job_id, delta_t, output_file, max_retry=5, transfer_url="http://localhost:8092"):
         if job_id is None:
             # get the last job_id listed from the query
             job_ids = self.mq.query_job_ids_direct(transfer_url)

@@ -25,6 +25,22 @@ class MetaQueryAPI:
         self.token = token
         self.monitoring_ip = os.getenv("MONITORING_HOST", "metdatalb-1298245410.us-east-2.elb.amazonaws.com")
 
+    def query_job_uuids(self):
+        hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + "/all/job/uuids"
+        # hostStr = "http://localhost:8080" + BASEPATH + "/all/job/uuids"
+        cookies = dict(ATOKEN=self.token)
+        headers = {"Authorization": "Bearer " + self.token + ""}
+        r = requests.get(hostStr, headers=headers, cookies=cookies)
+        return r.json()
+
+    def query_job_progress(self, job_uuid):
+        hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + MEASUREMENTS + "/progress"
+        param = {"jobUuid": job_uuid}
+        cookies = dict(ATOKEN=self.token)
+        headers = {"Authorization": "Bearer " + self.token + ""}
+        r = requests.get(hostStr, headers=headers, cookies=cookies, params=param)
+        return r.json()
+
     def query_job_id_cdb(self, job_id):
         param = {"jobId": job_id}
         hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + JOB
@@ -49,13 +65,14 @@ class MetaQueryAPI:
         return r.json()
 
     def query_job_ids_direct(self, transfer_url):
-        #http://localhost:8092
+        # http://localhost:8092
         hostStr = transfer_url + "/api/v1/job/ids"
         r = requests.get(hostStr)
         return r.json()
+
     def query_job_id_influx(self, job_id):
         # hostStr = constants.ODS_PROTOCOL + self.host + BASEPATH + MEASUREMENTS + JOB
-        hostStr = "http://"+self.monitoring_ip+"/api/v1/meta/stats/influx/job"
+        hostStr = "http://" + self.monitoring_ip + "/api/v1/meta/stats/influx/job"
         params = {"jobId": job_id, "userEmail": self.user}
 
         r = requests.get(hostStr, params=params)  # Needs to be handled better for errors
