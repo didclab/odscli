@@ -66,7 +66,7 @@ def rm(job_uuid):
 @click.option('--retry', type=click.INT, default=5)
 @click.option('--verify', '-v', is_flag=True, default=False)
 @click.option('--cc', type=click.IntRange(1, 64), help='the number of concurrent files to transfer', default=4)
-@click.option('--p', type=click.IntRange(1, 64), help='the number of parallel threads to use per concurrent file',
+@click.option('--p', type=click.IntRange(0, 64), help='the number of parallel threads to use per concurrent file',
               default=1)
 @click.option('--pp', type=click.IntRange(1, 100),
               help='The number of reads to one write operation. Also referred to as pipelining', default=10)
