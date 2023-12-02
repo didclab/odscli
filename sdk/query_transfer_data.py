@@ -94,7 +94,7 @@ def progress(job_uuid, retry):
 
 
 @query.command("monitor")
-@click.option("--job_id", type=click.INT, default=0)
+@click.option("--job_id", type=click.INT)
 @click.option("--url", "-u", type=click.STRING, help="url to query if using an ods connector")
 @click.option("--experiment_file", type=click.Path(writable=True, dir_okay=False),
               help="The file to put the results into")
@@ -105,6 +105,12 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
     local_retry = 0
     meta_query_api = MetaQueryAPI()
     pq = QueryGui()
+    if job_id == None:
+        if url is not None:
+            job_ids = meta_query_api.query_job_ids_direct(transfer_url=url)
+        else:
+            job_ids = meta_query_api.query_all_jobs_ids()
+    job_id = job_ids[-1]
     while end is False and local_retry < retry:
         job_batch_cdb = meta_query_api.query_transferservice_direct(job_id, url)
         job_batch_cdb = wrap_json_cdb_to_have_defaults(job_batch_cdb)
