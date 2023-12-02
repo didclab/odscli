@@ -85,10 +85,10 @@ class Log:
     def time_difference(self, start_time, end_time):
         print(start_time, end_time)
         format = '%Y-%m-%dT%H:%M:%S.%f%z'
-        start_date_time_obj = datetime.strptime(start_time, format)
-        end_date_time_obj = datetime.strptime(end_time, format)
-        # start_date_time_obj = datetime.fromisoformat(str(start_time).split("+")[0])
-        # end_date_time_obj = datetime.fromisoformat(str(end_time).split("+")[0])
+        # start_date_time_obj = datetime.strptime(start_time, format)
+        # end_date_time_obj = datetime.strptime(end_time, format)
+        start_date_time_obj = datetime.fromisoformat(str(start_time).split("+")[0])
+        end_date_time_obj = datetime.fromisoformat(str(end_time).split("+")[0])
         tdelta = end_date_time_obj - start_date_time_obj
         return tdelta.total_seconds()
 
