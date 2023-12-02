@@ -5,6 +5,7 @@ import os
 class Log:
 
     def visualize_job(self, batch_job_json, output_file=None):
+        print(batch_job_json)
         job_params = batch_job_json['jobParameters']
         print("Job MetaData: ")
         job_size = int(batch_job_json['jobParameters']['jobSize'])
