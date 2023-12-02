@@ -37,22 +37,6 @@ def query():
     pass
 
 
-# This command needs to be fixed.
-# 2 problems: Using influx data we need to detect if the job has stalled. We can do this by checking if influx data changes at all
-@query.command("monitor")
-@click.option("--id", type=click.INT,
-              help="Job Id to monitor if it is not passed we use the largest job id(most recent)")
-@click.option("--direct", type=click.STRING, help="Pass in the URI of the transfer node to monitor directly")
-@click.option("--delta_t", default="5s", help="The time delay between successive calls to ODS")
-@click.option("--save_to_file", type=click.Path(exists=False, writable=True), help="Path to save data to file.")
-@click.option("--max_retry", default=5, type=click.INT, help="Number of times to retry if there is no progress")
-def monitor_job(id, direct, delta_t, save_to_file, max_retry):
-    pq = QueryGui()
-    if direct:
-        pq.monitor_direct(id, int(timeparse(delta_t)), save_to_file, max_retry)
-    else:
-        pq.monitor(id, int(timeparse(delta_t)), save_to_file, max_retry)
-
 
 @query.command("uuids")
 def list_user_job_uuids():
@@ -117,8 +101,24 @@ def progress(job_uuid, retry):
 @click.option("--delta", type=click.INT, default=5)
 @click.option("--retry", type=click.INT, default=5)
 def monitor_job(job_id, url, experiment_file, delta, retry):
+    end = False
+    local_retry = 0
+    meta_query_api = MetaQueryAPI()
     pq = QueryGui()
-    pq.monitor_direct(job_id=job_id, delta_t=delta, output_file=experiment_file, max_retry=retry, transfer_url=url)
+    while end is False and local_retry < retry:
+        job_batch_cdb = meta_query_api.query_transferservice_direct(job_id, url)
+        job_batch_cdb = wrap_json_cdb_to_have_defaults(job_batch_cdb)
+        job_param_column = visualize_job_param_column(job_batch_cdb['jobParameters'])
+        job_table = visualize_job_table(job_batch_cdb)
+        step_table = visualize_step_table(job_batch_cdb)
+        console.print(job_table)
+        console.print(job_param_column)
+        console.print(step_table)
+
+        if job_batch_cdb['status'] in ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
+            pq.finished_job_stdout(batch_job_cdb=job_batch_cdb, output_file=experiment_file, job_id=job_id)
+            print('\n JobId: ', job_id, ' has final status of ', job_batch_cdb['status'])
+            return
 
 
 @query.command("ids")
