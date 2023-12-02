@@ -114,7 +114,7 @@ def progress(job_uuid, retry):
 @click.option("--url", "-u", type=click.STRING, help="url to query if using an ods connector")
 @click.option("--experiment_file", type=click.Path(writable=True, dir_okay=False),
               help="The file to put the results into")
-@click.option("--delta", type=click.INT)
+@click.option("--delta", type=click.INT, default=5)
 @click.option("--retry", type=click.INT, default=5)
 def monitor_job(job_id, url, experiment_file, delta, retry):
     pq = QueryGui()
