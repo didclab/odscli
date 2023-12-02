@@ -119,6 +119,7 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
             pq.finished_job_stdout(batch_job_cdb=job_batch_cdb, output_file=experiment_file, job_id=job_id)
             print('\n JobId: ', job_id, ' has final status of ', job_batch_cdb['status'])
             return
+        time.sleep(delta)
 
 
 @query.command("ids")
