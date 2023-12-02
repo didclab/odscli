@@ -62,7 +62,7 @@ class MetaQueryAPI:
         cookies = dict(ATOKEN=self.token)
         headers = {"Authorization": "Bearer " + self.token + ""}
         r = requests.get(hostStr, headers=headers, cookies=cookies)  # Needs to be handled better for errors
-        return r.json()
+        return sorted(r.json())
 
     def query_job_ids_direct(self, transfer_url):
         # http://localhost:8092
