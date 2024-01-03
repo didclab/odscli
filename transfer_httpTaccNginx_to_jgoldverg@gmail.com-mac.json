@@ -1,10 +1,15 @@
 {
     "ownerId": "jgoldverg@gmail.com",
     "source": {
-        "credId": "httpTaccNginx",
         "type": "http",
+        "credId": "httpTaccNginx",
+        "vfsSourceCredential": {
+            "uri": "",
+            "username": "",
+            "secret": ""
+        },
         "fileSourcePath": "/",
-        "resourceList": [
+        "infoList": [
             {
                 "path": "/parallel/",
                 "id": "/parallel/",
@@ -13,20 +18,20 @@
         ]
     },
     "destination": {
-        "credId": "jgoldverg@gmail.com-mac",
         "type": "vfs",
+        "credId": "jgoldverg@gmail.com-mac",
         "fileDestinationPath": "/Users/jacobgoldverg/testData/"
     },
     "options": {
         "compress": false,
         "encrypt": false,
-        "optimizer": "",
+        "optimizer": "BO",
         "overwrite": false,
         "retry": 5,
         "verify": false,
         "concurrencyThreadCount": 1,
         "parallelThreadCount": 1,
-        "pipeSize": 10,
+        "pipeSize": 1,
         "chunkSize": 10000000,
         "scheduledTime": "2023-10-25T14:52:15.183975Z"
     },
