@@ -1,6 +1,7 @@
 import time
 
 import click
+import pandas as pd
 
 from rich.progress import Progress, TextColumn, BarColumn, TransferSpeedColumn, TimeRemainingColumn
 from rich.progress import DownloadColumn
@@ -10,6 +11,7 @@ from sdk.meta_query_gui import QueryGui, MetaQueryAPI
 import json
 from datetime import datetime
 from math import ceil
+from dateutil import parser
 
 BASEPATH = "/api/metadata"
 JOB = "/job"
@@ -137,7 +139,6 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
                     file_size = entityInfo['size']
                     chunk_size = entityInfo['chunkSize']
                     total_chunks = ceil(file_size / chunk_size)
-                    print(step['step_name'] + "Has size: " + str(file_size) + " chunk_size:" + str(chunk_size) + " total_chunks:" +str(total_chunks) + "Initial write_count:" + str(step['writeCount']))
                     file_task = progress.add_task(step['step_name'], total=total_chunks)
                     progress.update(file_task, advance=int(step['writeCount']))
                     file_progress_id_map[step['step_name']] = file_task
@@ -149,8 +150,16 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
                     written = step['writeCount'] - file_last_write_count_map[step['step_name']]
                     file_last_write_count_map[step['step_name']] = step['writeCount']
                     progress.update(file_task_id, advance=written)
-                    if step['status'] == ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
+                    if step['status'] in ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
                         progress.update(file_task_id, completed=True)
+                if step['status'] in ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
+                    print('File: ', step['step_name'])
+                    file_size_mbps = (entityInfo['size'] / 1000000) * 8
+                    print('\tJob size in Megabits: ', file_size_mbps)
+                    file_time_seconds = pd.Timedelta(pd.to_datetime(step['endTime']) - pd.to_datetime(step['startTime'])).seconds
+                    file_time_seconds = max(file_time_seconds, 1)
+                    print('\tTotal Time for job to complete: ', file_time_seconds)
+                    print('\tTotal Job throughput: ', file_size_mbps / file_time_seconds, "Mbps \n")
 
             progress.refresh()
             if job_batch_cdb['status'] in ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
@@ -316,6 +325,7 @@ def visualize_step_table(job_json):
         path = entityInfo['path']
         size = entityInfo['size']
         chunkSize = entityInfo['chunkSize']
+
         step_table.add_row(step['step_name'], str(size), str(chunkSize), step['startTime'], step['endTime'],
                            str(step['readCount']), str(step['writeCount']), step['status'])
 
