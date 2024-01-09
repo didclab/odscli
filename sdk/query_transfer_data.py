@@ -113,6 +113,7 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
             job_ids = meta_query_api.query_all_jobs_ids()
         job_id = job_ids[-1]
     print("Using job_id: ", job_id)
+    done_map = {}
     with Progress() as progress:
         if url is not None:
             job_batch_cdb = meta_query_api.query_transferservice_direct(job_id, url)
@@ -120,10 +121,8 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
             job_batch_cdb = meta_query_api.query_job_id_cdb(job_id)
         visual_job_cdb = wrap_json_cdb_to_have_defaults(job_batch_cdb)
         console.print(visualize_job_table(visual_job_cdb))
-        # console.print(visualize_step_table(visual_job_cdb))
         file_progress_id_map = {}
         file_last_write_count_map = {}
-        #Create and update progress bars as we go
 
         while local_retry < retry:
             if url is not None:
@@ -139,27 +138,32 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
                     file_size = entityInfo['size']
                     chunk_size = entityInfo['chunkSize']
                     total_chunks = ceil(file_size / chunk_size)
-                    file_task = progress.add_task(step['step_name'], total=total_chunks)
+                    file_task = progress.add_task("[green]Processing: "+step['step_name'], total=total_chunks)
                     progress.update(file_task, advance=int(step['writeCount']))
                     file_progress_id_map[step['step_name']] = file_task
                     file_last_write_count_map[step['step_name']] = int(step['writeCount'])
                     if step['status'] == ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
                         progress.update(file_task_id, completed=True)
+                        progress.remove_task(file_task_id)
+                        console.print()
                 else:
                     file_task_id = file_progress_id_map[step['step_name']]
                     written = step['writeCount'] - file_last_write_count_map[step['step_name']]
                     file_last_write_count_map[step['step_name']] = step['writeCount']
                     progress.update(file_task_id, advance=written)
                     if step['status'] in ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
-                        progress.update(file_task_id, completed=True)
+                        progress.update(file_task_id, description="[blue]Completed File: " + step['step_name'])
                 if step['status'] in ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
-                    print('File: ', step['step_name'])
-                    file_size_mbps = (entityInfo['size'] / 1000000) * 8
-                    print('\tJob size in Megabits: ', file_size_mbps)
-                    file_time_seconds = pd.Timedelta(pd.to_datetime(step['endTime']) - pd.to_datetime(step['startTime'])).seconds
-                    file_time_seconds = max(file_time_seconds, 1)
-                    print('\tTotal Time for job to complete: ', file_time_seconds)
-                    print('\tTotal Job throughput: ', file_size_mbps / file_time_seconds, "Mbps \n")
+                    if step['step_name'] not in done_map:
+                        print('File: ', step['step_name'])
+                        file_size_mbps = (entityInfo['size'] / 1000000) * 8
+                        print('\tFile size in Megabits: ', file_size_mbps)
+                        file_time_seconds = pd.Timedelta(pd.to_datetime(step['endTime']) - pd.to_datetime(step['startTime'])).seconds
+                        file_time_seconds = max(file_time_seconds, 1)
+                        print('\tTotal Time for file to complete: ', file_time_seconds)
+                        print('\tTotal File throughput: ', file_size_mbps / file_time_seconds, "Mbps \n")
+                        # progress.update(file_progress_id_map[step['step_name']], completed=step['writeCount'])
+                        done_map[step['step_name']] = True
 
             progress.refresh()
             if job_batch_cdb['status'] in ["COMPLETED", "FAILED", "ABANDONED", "STOPPED"]:
