@@ -11,7 +11,6 @@ conf.use_pcap = True
 
 import requests
 import pandas as pd
-import math
 
 
 @click.group('measure_cli')

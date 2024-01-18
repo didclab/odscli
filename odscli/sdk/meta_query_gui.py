@@ -1,14 +1,8 @@
-import os
-import csv
-
 import pandas as pd
-from sdk.meta_query import MetaQueryAPI
-from tabulate import tabulate
-from datetime import datetime
-import time
+from odscli.sdk.meta_query import MetaQueryAPI
 from pathlib import Path
 import csv
-from sdk.log import Log
+from odscli.sdk.log import Log
 
 COMPLETED = "COMPLETED"
 csv_headers = ['jobId', 'jobSize (MB)', 'totalSeconds', 'throughput (Mbps)', 'concurrency', 'parallelism', 'pipelining',

@@ -1,7 +1,7 @@
 import click
-import sdk.token_utils as token_utils
+import odscli.sdk.token_utils as token_utils
 import requests
-import sdk.constants as constants
+import odscli.sdk.constants as constants
 import json
 from datetime import datetime
 

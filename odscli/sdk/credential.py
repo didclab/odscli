@@ -1,6 +1,6 @@
 import click
-import sdk.constants as constants
-import sdk.token_utils as token_utils
+import odscli.sdk.constants as constants
+import odscli.sdk.token_utils as token_utils
 import requests
 from rich.console import Console
 from rich.table import Table

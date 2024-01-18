@@ -7,11 +7,10 @@ from rich.progress import Progress, TextColumn, BarColumn, TransferSpeedColumn, 
 from rich.progress import DownloadColumn
 from rich.console import Console
 from rich.table import Table
-from sdk.meta_query_gui import QueryGui, MetaQueryAPI
+from odscli.sdk.meta_query_gui import QueryGui, MetaQueryAPI
 import json
 from datetime import datetime
 from math import ceil
-from dateutil import parser
 
 BASEPATH = "/api/metadata"
 JOB = "/job"

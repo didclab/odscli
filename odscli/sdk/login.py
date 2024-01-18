@@ -1,5 +1,5 @@
 import click
-import sdk.token_utils as token_utils
+import odscli.sdk.token_utils as token_utils
 import os
 
 

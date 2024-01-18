@@ -1,9 +1,9 @@
-import setuptools, os
+import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 with open('requirements.txt') as f:
-    requirements = f.readlines()
+    requirements = f.read().splitlines()
 with open("_version.py", encoding='utf-8') as f:
     version = f.read().strip().split(" = ")[1][1:-1]
 
@@ -25,9 +25,9 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['tests']),
     entry_points={
         'console_scripts': [
-            'ods = odscli:main'
+            'ods = odscli.odscli:main'
         ]
     },
-    install_requires=[requirements],
-    python_requires=">=3.10",
+    install_requires=requirements,
+    python_requires=">=3.9",
 )

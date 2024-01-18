@@ -1,8 +1,8 @@
 import os
 
 import requests
-import sdk.constants as constants
-import sdk.token_utils as tok
+import odscli.sdk.constants as constants
+import odscli.sdk.token_utils as tok
 
 BASEPATH = "/api/metadata"
 JOB = "/job"

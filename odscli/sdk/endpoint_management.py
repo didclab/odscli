@@ -1,8 +1,8 @@
 import click
 from rich.table import Table
 from rich.console import Console
-import sdk.token_utils as token_utils
-import sdk.constants as constants
+import odscli.sdk.token_utils as token_utils
+import odscli.sdk.constants as constants
 import requests
 
 console = Console()
