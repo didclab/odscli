@@ -8,5 +8,5 @@ from odscli.sdk.carbon_measure import measure_cli
 
 odscli = click.CommandCollection(sources=[schedule_cli, credential_cli, endpoint_cli, query_cli, auth_cli, measure_cli])
 
-if __name__ == '__main__':
+def main():
     odscli()
