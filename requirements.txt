@@ -8,3 +8,6 @@ pprintpp~=0.4.0
 plotext~=5.2.7
 click
 rich
+scapy
+basemap==1.3.3
+
