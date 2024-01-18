@@ -23,12 +23,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Bump version
-      run: |
-        pip install bump2version
-        current_version=$(grep -oP '__version__ = "\K[^"]+' _version.py)'  # Extract current version
-        bump2version --current-version "$current_version" patch
-
     - name: Build and publish
       env:
         TWINE_USERNAME: __token__
