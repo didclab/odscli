@@ -1,37 +1,33 @@
-from setuptools import setup, find_packages
+import setuptools, os
 
-setup(
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+with open('requirements.txt') as f:
+    requirements = f.readlines()
+with open("_version.py", encoding='utf-8') as f:
+    version = f.read().strip().split(" = ")[1][1:-1]
 
-        name ='cmdline',
-
-        version ='1.0.0',
-
-        author ='Admin OneDataShare',
-
-        author_email ='admin@onedatashare.org',
-
-        description ='Demo Package for CLI',
-
-        packages = find_packages(),
-
-        entry_points ={
-
-            'console_scripts': [
-
-                'main = cmdline:main'
-
-            ]
-
-        },
-
-        classifiers =(
-
-            "Programming Language :: Python :: 3",
-
-            "Operating System :: OS Independent",
-
-        ),
-
-
-        zip_safe = False
+setuptools.setup(
+    name="odscli",
+    version=version,
+    author="OneDataShare",
+    author_email="onedatashare@gmail.com",
+    description="The onedatashare.org cli",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/didclab/odscli",
+    project_urls={},
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    packages=setuptools.find_packages(exclude=['tests']),
+    entry_points={
+        'console_scripts': [
+            'ods = odscli:main'
+        ]
+    },
+    install_requires=[requirements],
+    python_requires=">=3.10",
 )

@@ -38,7 +38,6 @@ class QueryGui:
         self.log = Log()
 
     def finished_job_stdout(self, batch_job_cdb, output_file, job_id):
-
         df = pd.json_normalize(batch_job_cdb)
         job_size = (int(batch_job_cdb['jobParameters']['jobSize']) / 1000000) * 8  # convert Bytes to MB then to Mb
         self.job_batch_df = transform_start_end_last(df)
