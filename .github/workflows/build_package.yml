@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.10 ]
+        python-version: [ 3.10.13 ]
     steps:
       - uses: actions/checkout@v2
 
@@ -24,19 +24,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install twine setuptools build wheel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
       - name: Update version
         run: |
           sed -i "s/<version>/${{ github.event.release.tag_name }}/g" setup.py
-
       - name: Build odscli
         run: |
           python setup.py sdist bdist_wheel
-
       - name: Build and publish
-        shell: bash
-        run: |
-          twine upload -r pypi dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          python setup.py sdist bdist_wheel
+          pip install twine
+          twine upload dist/*
