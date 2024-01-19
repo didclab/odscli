@@ -1,38 +1,11 @@
-import click
+import requests
+import pandas as pd
 import os
-import logging
-
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.layers.inet import IP, ICMP
 from scapy.sendrecv import sr1
 from scapy.config import conf
 
 conf.use_pcap = True
-
-import requests
-import pandas as pd
-
-
-@click.group('measure_cli')
-@click.pass_context
-def measure_cli():
-    pass
-
-
-@measure_cli.group('measure')
-def measure():
-    pass
-
-
-@measure.command("carbon")
-@click.option('--ip', default="", help="The IP address of the destination host", type=click.STRING)
-@click.option('--max_hops', default=64, type=click.INT)
-def carbon_measure(ip, max_hops):
-    ip_list = traceroute(ip, max_hops)
-    print(f"IP's to source {ip_list}")
-    ip_df = geo_locate_ips(ip_list)
-    compute_carbon_per_ip(ip_df)
-    # pass
 
 
 def traceroute(destination, max_hops):
