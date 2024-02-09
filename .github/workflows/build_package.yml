@@ -1,4 +1,4 @@
-name: ODS cli publish to pypi
+name: ODS cli publish to pypi and push to ECR
 
 on:
   release:
@@ -24,12 +24,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install twine setuptools build wheel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
       - name: Update version
         run: |
           sed -i "s/<version>/${{ github.event.release.tag_name }}/g" setup.py
+
       - name: Build odscli
         run: |
           python setup.py sdist bdist_wheel
+          
       - name: Build and publish
         env:
           TWINE_USERNAME: __token__
@@ -37,3 +40,16 @@ jobs:
         run: |
           pip install twine
           twine upload dist/*
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1
+
+      - name: Build and push Docker image to ECR
+        run: |
+          aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_REPO_URI }}
+          docker build -t ${{ secrets.AWS_REPO_URI }}/odscli:${{ github.event.release.tag_name }} .
+          docker push ${{ secrets.AWS_REPO_URI }}/odscli:${{ github.event.release.tag_name }}
