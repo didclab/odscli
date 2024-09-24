@@ -9,7 +9,7 @@ with open("_version.py", encoding='utf-8') as f:
 
 setuptools.setup(
     name="odscli",
-    version="1.0.1",
+    version=version,
     author="OneDataShare",
     author_email="onedatashare@gmail.com",
     description="The onedatashare.org cli",
@@ -25,7 +25,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['tests']),
     entry_points={
         'console_scripts': [
-            'ods = odscli.odscli:main'
+            'ods = odscli.ods_cli:main'
         ]
     },
     install_requires=requirements,

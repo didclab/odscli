@@ -1,9 +1,9 @@
 import click
 import logging
 import os
-from odscli.sdk.measure.measure_carbon import traceroute, compute_carbon_per_ip, geo_locate_ips
-from odscli.sdk.measure.measure_host_network import begin_measuring
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+from odscli.sdk.metrics.measure_carbon import traceroute, compute_carbon_per_ip, geo_locate_ips
+from odscli.sdk.metrics.measure_host_network import begin_measuring
+
 
 
 @click.group('measure_cli')

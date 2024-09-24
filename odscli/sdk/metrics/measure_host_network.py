@@ -2,7 +2,7 @@ import time
 
 from datetime import datetime, timedelta
 
-from odscli.sdk.measure.metrics_pojo import ODS_Metrics
+from odscli.sdk.metrics.metrics_pojo import ODS_Metrics
 
 
 def begin_measuring(file_path, interface, measure_tcp=True, measure_udp=True,
