@@ -42,7 +42,7 @@ def readConfig():
 
 
 def isValidUser(host: str, email: str) -> bool:
-    isValidURL = "http://" + host + constants.VALIDATE_EMAILV2
+    isValidURL = "https://" + host + constants.VALIDATE_EMAILV2
     body = {'email': email}
     req = requests.post(isValidURL, json=body)  # Needs to be handled better for errors
     return req.json()
