@@ -38,7 +38,6 @@ def query():
     pass
 
 
-
 @query.command("uuids")
 def list_user_job_uuids():
     meta_query_api = MetaQueryAPI()
@@ -137,7 +136,7 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
                     file_size = entityInfo['size']
                     chunk_size = entityInfo['chunkSize']
                     total_chunks = ceil(file_size / chunk_size)
-                    file_task = progress.add_task("[green]Processing: "+step['step_name'], total=total_chunks)
+                    file_task = progress.add_task("[green]Processing: " + step['step_name'], total=total_chunks)
                     progress.update(file_task, advance=int(step['writeCount']))
                     file_progress_id_map[step['step_name']] = file_task
                     file_last_write_count_map[step['step_name']] = int(step['writeCount'])
@@ -157,7 +156,8 @@ def monitor_job(job_id, url, experiment_file, delta, retry):
                         print('File: ', step['step_name'])
                         file_size_mbps = (entityInfo['size'] / 1000000) * 8
                         print('\tFile size in Megabits: ', file_size_mbps)
-                        file_time_seconds = pd.Timedelta(pd.to_datetime(step['endTime']) - pd.to_datetime(step['startTime'])).seconds
+                        file_time_seconds = pd.Timedelta(
+                            pd.to_datetime(step['endTime']) - pd.to_datetime(step['startTime'])).seconds
                         file_time_seconds = max(file_time_seconds, 1)
                         print('\tTotal Time for file to complete: ', file_time_seconds)
                         print('\tTotal File throughput: ', file_size_mbps / file_time_seconds, "Mbps \n")
@@ -298,7 +298,9 @@ def visualize_influx_data(influx_json, network_flag, host_flag):
 
         if host_flag:
             host_table.add_row(str(entry['memory']), str(entry['maxMemory']),
-                               str(entry['freeMemory']), str(entry['allocatedMemory']), str(entry['coreCount']), str(entry['cpu_frequency_min']), str(entry['cpu_frequency_current']), str(entry['cpu_frequency_max']))
+                               str(entry['freeMemory']), str(entry['allocatedMemory']), str(entry['coreCount']),
+                               str(entry['cpu_frequency_min']), str(entry['cpu_frequency_current']),
+                               str(entry['cpu_frequency_max']))
 
         job_table.add_row(entry['odsUser'], entry['transferNodeName'], str(entry['jobId']), str(entry['jobSize']),
                           str(entry['avgFileSize']), entry['sourceType'], entry['sourceCredId'],
