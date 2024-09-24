@@ -9,7 +9,7 @@ with open("_version.py", encoding='utf-8') as f:
 
 setuptools.setup(
     name="odscli",
-    version="1.0.0",
+    version="1.0.1",
     author="OneDataShare",
     author_email="onedatashare@gmail.com",
     description="The onedatashare.org cli",
