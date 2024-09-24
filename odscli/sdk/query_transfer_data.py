@@ -285,7 +285,9 @@ def visualize_influx_data(influx_json, network_flag, host_flag):
         host_table.add_column("Free Memory (Bytes)")
         host_table.add_column("Allocated Memory (Bytes)")
         host_table.add_column("Core Count")
-        host_table.add_column("Cpu Frequency")
+        host_table.add_column("Min Cpu Frequency")
+        host_table.add_column("Current Cpu Frequency")
+        host_table.add_column("Max Cpu Frequency")
 
     for entry in influx_json:
         if network_flag:
@@ -296,7 +298,7 @@ def visualize_influx_data(influx_json, network_flag, host_flag):
 
         if host_flag:
             host_table.add_row(str(entry['memory']), str(entry['maxMemory']),
-                               str(entry['freeMemory']), str(entry['allocatedMemory']), str(entry['coreCount']))
+                               str(entry['freeMemory']), str(entry['allocatedMemory']), str(entry['coreCount']), str(entry['cpu_frequency_min']), str(entry['cpu_frequency_current']), str(entry['cpu_frequency_max']))
 
         job_table.add_row(entry['odsUser'], entry['transferNodeName'], str(entry['jobId']), str(entry['jobSize']),
                           str(entry['avgFileSize']), entry['sourceType'], entry['sourceCredId'],
