@@ -224,7 +224,6 @@ def query_job_measurements(id, network, host, save_to_file):
     if save_to_file:
         with open(save_to_file, 'w') as json_file:
             json.dump(influx_json, json_file)
-    print(influx_json)
     visualize_influx_data(influx_json, network, host)
 
 
