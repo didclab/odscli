@@ -54,8 +54,7 @@ def ls_node_count():
     req = constants.ODS_PROTOCOL + host + constants.NODE_COUNT
     cookies = dict(ATOKEN=token)
     res = requests.get(req, cookies=cookies)
-    print(res.json())
-
+    console.print(f"Node Count: {res.text}")
 
 def build_node_table(name):
     node_table = Table(title=name)
