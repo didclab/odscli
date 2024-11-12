@@ -20,3 +20,24 @@ SCHEDULE = "/api/job"
 CRED_OAUTH_REGISTERV2 = "/api/oauth"
 CRED_ACCOUNT_GETV2 = "/endpoint-cred/{userId}/{type}"
 CRED_ACCOUNTID_GETV2 = "/endpoint-cred/{userId}/{type}/{accountId}"
+
+NODE_LIST_CONNECTORS = "/api/nodes/{user}"
+NODE_LIST_ODS = "/api/nodes/ods"
+NODE_COUNT = "/api/nodes/count"
+
+CARBON_API = "/api/carbon"
+CARBON_NODE_AND_JOB = "/query/{transferNodeName}/{jobUuid}"
+CARBON_USER = "/user"
+CARBON_JOB = "/job/{jobUuid}"
+CARBON_NODE = "/node/{transferNodeName}"
+CARBON_LATEST = "/latest/{jobUuid}"
+CARBON_RESULT = "/result/{job_uuid}"
+
+
+def human_readable_size(size_in_bytes):
+    """Convert bytes to a human-readable string with appropriate units."""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size_in_bytes < 1024:
+            return f"{size_in_bytes:.2f} {unit}"
+        size_in_bytes /= 1024
+    return f"{size_in_bytes:.2f} PB"  # Handles very large sizes

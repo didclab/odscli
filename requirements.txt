@@ -1,5 +1,5 @@
 requests~=2.31.0
-pandas~=1.4.3
+pandas
 setuptools~=65.5.1
 tabulate~=0.8.10
 python-dateutil~=2.8.2

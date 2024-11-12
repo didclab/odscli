@@ -9,7 +9,7 @@
             "secret": ""
         },
         "fileSourcePath": "/",
-        "infoList": [
+        "resourceList": [
             {
                 "path": "/parallel/",
                 "id": "/parallel/",
@@ -30,10 +30,15 @@
         "retry": 5,
         "verify": false,
         "concurrencyThreadCount": 1,
-        "parallelThreadCount": 1,
+        "parallelThreadCount": 5,
         "pipeSize": 1,
         "chunkSize": 10000000,
-        "scheduledTime": "2023-10-25T14:52:15.183975Z"
+        "scheduledTime": "2024-11-25T14:52:15.183975Z"
+    },
+    "transferSla": {
+        "percentCarbon": 0.0,
+        "percentThroughput":0.0,
+        "percentElectricity": 0.0
     },
     "transferNodeName": ""
 }

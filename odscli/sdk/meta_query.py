@@ -65,7 +65,7 @@ class MetaQueryAPI:
 
     def query_job_ids_direct(self, transfer_url):
         # http://localhost:8092
-        hostStr = transfer_url + "/api/v1/job/ids"
+        hostStr = transfer_url + "/api/v1/job/id"
         r = requests.get(hostStr)
         return r.json()
 
