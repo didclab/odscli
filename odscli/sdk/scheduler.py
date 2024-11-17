@@ -24,6 +24,7 @@ def schedule():
     pass
 
 
+
 @schedule.command('ls')
 def ls():
     host, user, token = token_utils.readConfig()
@@ -108,19 +109,37 @@ def details(job_uuid):
     url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/details"
     cookies = dict(ATOKEN=token)
     resp = requests.get(url, params={'jobUuid': job_uuid}, cookies=cookies)
-    print(resp.status_code)
-    print(resp.text)
+    if resp.status_code < 200 and resp.status_code > 299:
+        console.print(f"Error: HTTP status code={resp.status_code} with error message: \n {resp.text}")
+        return
+
+    build_job_table(resp.json())
+
+
+@schedule.command('stop')
+@click.argument('job_uuid', type=click.UUID)
+def stop_job(job_uuid):
+    host, user, token = token_utils.readConfig()
+    url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + f"/stop/{job_uuid}"
+    cookies = dict(ATOKEN=token)
+    resp = requests.delete(url, cookies=cookies)
+    if resp.status_code < 300 and resp.status_code > 199:
+        console.print(f"Stopped Job with UUID: {job_uuid}")
+    else:
+        console.print(f"Http Status Code {resp.status_code} with error: \n {resp.text}")
 
 
 @schedule.command('rm')
 @click.argument('job_uuid', type=click.UUID)
 def rm(job_uuid):
     host, user, token = token_utils.readConfig()
-    url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/details"
+    url = constants.ODS_PROTOCOL + host + constants.SCHEDULE + "/delete"
     cookies = dict(ATOKEN=token)
     resp = requests.delete(url, params={'jobUuid': job_uuid}, cookies=cookies)
-    print(resp.status_code)
-    print(resp.text)
+    if resp.status_code < 300 and resp.status_code > 199:
+        console.print(f"Delete job Uuid: {job_uuid}")
+    else:
+        console.print(f"Http Status Code {resp.status_code} with error: \n {resp.text}")
 
 
 @schedule.command('submit')
@@ -256,3 +275,64 @@ def parameters(node_name, concurrency, parallelism, pipelining, chunksize):
         pprint(body)
     else:
         console.print(f"[red] Http error number: {resp.status_code}")
+
+def build_job_table(job_data):
+    print(job_data)
+
+    job_table = Table.grid(padding=(0, 1))  # Use grid layout to avoid extra column
+
+    # Basic job information table
+    basic_info_table = Table(title="Basic Info", show_lines=True)
+    basic_info_table.add_column("Field", style="yellow")
+    basic_info_table.add_column("Value", style="green")
+    basic_info_table.add_row("Owner ID", job_data["ownerId"])
+    basic_info_table.add_row("Job UUID", job_data["jobUuid"])
+    basic_info_table.add_row("Transfer Node Name", job_data["transferNodeName"])
+
+    # Options table, excluding "chunkSize"
+    options_table = Table(title="Options", show_lines=True)
+    options_table.add_column("Option", style="cyan")
+    options_table.add_column("Value", style="magenta")
+    for key, value in job_data["options"].items():
+        if key != "chunkSize":  # Exclude chunkSize from visualization
+            options_table.add_row(key, str(value))
+
+    # Grid layout for Basic Info and Options side by side
+    basic_options_grid = Table.grid()
+    basic_options_grid.add_row(basic_info_table, options_table)
+
+    source_table = Table(title="Source Information", show_lines=True)
+    source_table.add_column("Field", style="yellow")
+    source_table.add_column("Value", style="green")
+    source_table.add_row("Type", job_data["source"]["type"])
+    source_table.add_row("Credential ID", job_data["source"]["credId"])
+    source_table.add_row("Source Path", job_data["source"]["fileSourcePath"])
+
+    file_table = Table(title="File List", show_lines=True)
+    file_table.add_column("ID", style="cyan")
+    file_table.add_column("Path", style="green")
+    file_table.add_column("Size", style="red")
+    file_table.add_column("Chunk Size", style="blue")
+    for file_info in job_data["source"]["infoList"]:
+        file_table.add_row(
+            file_info["id"],
+            file_info["path"],
+            constants.human_readable_size(file_info["size"]),
+            constants.human_readable_size(file_info["chunkSize"])
+        )
+    source_table.add_row("File Information", file_table)
+
+    destination_table = Table(title="Destination Information", show_lines=True)
+    destination_table.add_column("Field", style="yellow")
+    destination_table.add_column("Value", style="green")
+    destination_table.add_row("Type", job_data["destination"]["type"])
+    destination_table.add_row("Credential ID", job_data["destination"]["credId"])
+    destination_table.add_row("Destination Path", job_data["destination"]["fileDestinationPath"])
+
+    source_dest_grid = Table.grid()
+    source_dest_grid.add_row(source_table, destination_table)
+
+    job_table.add_row(basic_options_grid)
+    job_table.add_row(source_dest_grid)
+
+    return job_table
