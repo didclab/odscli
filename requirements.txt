@@ -9,5 +9,7 @@ plotext~=5.2.7
 click
 rich
 scapy
+psutil
+tcp_latency
 # basemap==1.3.3
 
