@@ -16,6 +16,8 @@ AUTHENTICATEV2 = "/authenticate"
 CRED_ACCOUNT_REGISTERV2 = "/api/cred/{type}"
 CRED_ACCOUNT_DELETE = "/api/cred/{type}/{credID}"
 SCHEDULE = "/api/job"
+OPTIMIZER= "/api/optimizer"
+OPTIMIZER_CONFIG= "/api/configs"
 
 CRED_OAUTH_REGISTERV2 = "/api/oauth"
 CRED_ACCOUNT_GETV2 = "/endpoint-cred/{userId}/{type}"

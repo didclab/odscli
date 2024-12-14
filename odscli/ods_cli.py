@@ -7,8 +7,9 @@ from odscli.sdk.login import auth_cli
 from odscli.sdk.measure import measure_cli
 from odscli.sdk.ftn_nodes import nodes_cli
 from odscli.sdk.carbon_scheduler import carbon_cli
+from odscli.sdk.optimizer import optimizer_cli
 
-odscli = click.CommandCollection(sources=[schedule_cli, credential_cli, endpoint_cli, query_cli, auth_cli, measure_cli, nodes_cli, carbon_cli])
+odscli = click.CommandCollection(sources=[optimizer_cli, schedule_cli, credential_cli, endpoint_cli, query_cli, auth_cli, measure_cli, nodes_cli, carbon_cli])
 
 def main():
     odscli()
