@@ -4,6 +4,7 @@ from rich.table import Table
 import odscli.sdk.token_utils as token_utils
 import requests
 from odscli.sdk.constants import ODS_PROTOCOL, OPTIMIZER, OPTIMIZER_CONFIG
+import json
 console = Console()
 
 @click.group('optimizer_cli')
